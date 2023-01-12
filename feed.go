@@ -11,17 +11,19 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/fiatjaf/go-nostr"
 	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/mmcdole/gofeed"
+	"github.com/nbd-wtf/go-nostr"
 	"github.com/rif/cache2go"
 )
 
-var fp = gofeed.NewParser()
-var feedCache = cache2go.New(512, time.Minute*19)
-var client = &http.Client{
-	Timeout: 5 * time.Second,
-}
+var (
+	fp        = gofeed.NewParser()
+	feedCache = cache2go.New(512, time.Minute*19)
+	client    = &http.Client{
+		Timeout: 5 * time.Second,
+	}
+)
 
 type Entity struct {
 	PrivateKey string
@@ -81,7 +83,7 @@ func parseFeed(url string) (*gofeed.Feed, error) {
 	}
 
 	// cleanup a little so we don't store too much junk
-	for i, _ := range feed.Items {
+	for i := range feed.Items {
 		feed.Items[i].Content = ""
 	}
 	feedCache.Set(url, feed)
@@ -106,7 +108,7 @@ func feedToSetMetadata(pubkey string, feed *gofeed.Feed) nostr.Event {
 
 	evt := nostr.Event{
 		PubKey:    pubkey,
-		CreatedAt: uint32(createdAt.Unix()),
+		CreatedAt: createdAt,
 		Kind:      nostr.KindSetMetadata,
 		Tags:      nostr.Tags{},
 		Content:   string(content),
@@ -137,7 +139,7 @@ func itemToTextNote(pubkey string, item *gofeed.Item) nostr.Event {
 
 	evt := nostr.Event{
 		PubKey:    pubkey,
-		CreatedAt: uint32(createdAt.Unix()),
+		CreatedAt: createdAt,
 		Kind:      nostr.KindTextNote,
 		Tags:      nostr.Tags{},
 		Content:   content,
@@ -148,7 +150,7 @@ func itemToTextNote(pubkey string, item *gofeed.Item) nostr.Event {
 }
 
 func privateKeyFromFeed(url string) string {
-	m := hmac.New(sha256.New, []byte(b.Secret))
+	m := hmac.New(sha256.New, []byte(relay.Secret))
 	m.Write([]byte(url))
 	r := m.Sum(nil)
 	return hex.EncodeToString(r)

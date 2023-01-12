@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/fiatjaf/bip340"
-	"github.com/fiatjaf/relayer"
+	"github.com/nbd-wtf/go-nostr"
 	. "github.com/stevelacy/daz"
 )
 
@@ -21,7 +21,7 @@ var head = H("head",
 
 func handleWebpage(w http.ResponseWriter, r *http.Request) {
 	items := make([]HTML, 0, 200)
-	iter := b.db.NewIter(nil)
+	iter := relay.db.NewIter(nil)
 	for iter.First(); iter.Valid(); iter.Next() {
 		pubkey := string(iter.Key())
 		var entity Entity
@@ -35,7 +35,8 @@ func handleWebpage(w http.ResponseWriter, r *http.Request) {
 			),
 			H("td",
 				H("a", Attr{
-					"href": entity.URL}, entity.URL),
+					"href": entity.URL,
+				}, entity.URL),
 			),
 		))
 	}
@@ -44,17 +45,15 @@ func handleWebpage(w http.ResponseWriter, r *http.Request) {
 		H("h1", "rsslay"),
 		H("p", "rsslay turns RSS or Atom feeds into ",
 			H("a", Attr{
-				"href": "https://github.com/fiatjaf/nostr"}, "Nostr"),
+				"href": "https://github.com/fiatjaf/nostr",
+			}, "Nostr"),
 			" profiles.",
 		),
 		H("h2", "How to use"),
 		H("ol",
 			H("li", "Get the blog URL or RSS or Atom feed URL and paste below;"),
 			H("li", "Click the button to get its corresponding public key"),
-			H("li", "Add the relay ",
-				H("code", "wss://"+b.Domain),
-				" to your Nostr client",
-			),
+			H("li", "Add this relay to your Nostr client"),
 			H("li", "Follow the feed's public key from your Nostr client."),
 		),
 		H("form", Attr{
@@ -106,26 +105,25 @@ func handleCreateFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sk := privateKeyFromFeed(feedurl)
-	s, err := bip340.ParsePrivateKey(sk)
+	pubkey, err := nostr.GetPublicKey(sk)
 	if err != nil {
 		w.WriteHeader(500)
 		fmt.Fprint(w, "bad private key: "+err.Error())
 		return
 	}
-	pubkey := fmt.Sprintf("%x", bip340.GetPublicKey(s))
 
 	j, _ := json.Marshal(Entity{
 		PrivateKey: sk,
 		URL:        feedurl,
 	})
 
-	if err := b.db.Set([]byte(pubkey), j, nil); err != nil {
+	if err := relay.db.Set([]byte(pubkey), j, nil); err != nil {
 		w.WriteHeader(500)
 		fmt.Fprint(w, "failure: "+err.Error())
 		return
 	}
 
-	relayer.Log.Info().Str("url", feedurl).Str("pubkey", pubkey).Msg("saved feed")
+	log.Printf("saved feed at url %q as pubkey %s", feedurl, pubkey)
 
 	fmt.Fprintf(w, "url   : %s\npubkey: %s", feedurl, pubkey)
 	return
