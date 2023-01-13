@@ -1,0 +1,80 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <title>rsslay</title>
+</head>
+
+<body>
+    <div class="hero is-primary">
+        <div class="hero-body">
+            <p class="title"><a href="/">rsslay</a></p>
+            <p class="subtitle">rsslay turns RSS or Atom feeds into <a
+                    href="https://github.com/nostr-protocol/nostr">Nostr</a> profiles.</p>
+        </div>
+    </div>
+    <div class="container is-fluid mt-4">
+        <nav class="level">
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Current feeds count</p>
+                    <p class="title">{{.Count}}</p>
+                </div>
+            </div>
+        </nav>
+        <h2 class="subtitle">How to use</h2>
+        <div class="content">
+            <ol>
+                <li>Get the blog URL or RSS or Atom feed URL and paste below;</li>
+                <li>Click the button to get its corresponding public key</li>
+                <li>Add this relay to your Nostr client</li>
+                <li>Follow the feed's public key from your Nostr client.</li>
+            </ol>
+        </div>
+        <div class="content">
+            <form action="/create" method="GET" class="control">
+                <div class="field">
+                    <div class="control"><label><input class="input is-link is-normal" name="url" type="url"
+                                placeholder="https://.../feed"></label></div>
+                </div>
+                <div class="field">
+                    <div class="control">
+                        <button class="button is-link">Get Public Key</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <h2 class="subtitle">Existing feeds</h2>
+        <table class="table">
+            <tbody>
+                <tr>
+                    <th>Public key</th>
+                    <th>Feed URL</th>
+                </tr>
+                {{range .Entries}}
+                <tr>
+                    <td><a href="https://www.nostr.guru/p/{{.PubKey}}" style="word-break: break-all;">{{.PubKey}}</a>
+                    </td>
+                    <td><a href="{{.Url}}">{{.Url}}</a>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+        <h2 class="subtitle">Source Code</h2>
+        <p>You can find it at <a href="https://github.com/piraces/rsslay">github.com/piraces/rsslay</a></p>
+        <p>Upstream source code at <a href="https://github.com/fiatjaf/relayer/tree/master/rss-bridge">github.com/fiatjaf/relayer</a></p>
+    </div>
+    <footer class="footer">
+        <div class="content has-text-centered">
+            <p>
+                <strong>rsslay</strong> original work by <a href="https://fiatjaf.com">fiatjaf</a> modifications by <a href="https://piraces.dev">piraces</a>. The source code is
+                <a href="https://github.com/piraces/rsslay/blob/master/LICENSE">UNlicensed</a>. Keep the good vibes 🤙
+            </p>
+        </div>
+    </footer>
+</body>
+
+</html>

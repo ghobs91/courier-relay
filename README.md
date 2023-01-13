@@ -1,26 +1,51 @@
-rss-bridge, a relay that creates virtual nostr profiles for each rss feed
-=========================================================================
+# rsslay
+**Relay that creates virtual nostr profiles for each RSS feed submitted**
 
-  - a nostr relay implementation based on relayer.
-  - doesn't accept any events, only emits them.
-  - does so by manually reading and parsing rss feeds.
+🚨🚨🚨 **Currently a Work-in-progress, use at your own risk!** 🚨🚨🚨
 
-![](screenshot.png)
 
-running
--------
+  - A Nostr relay implementation based on [relayer](https://github.com/fiatjaf/relayer/) by [fiatjaf](https://fiatjaf.com).
+  - Doesn't accept any events, only emits them.
+  - Does so by manually reading and parsing RSS feeds.
 
-grab a binary from the releases page and run it with the following environment variable:
+![Screenshot of main page](screenshot.png)
 
-    SECRET=just-a-random-string-to-be-used-when-generating-the-virtual-private-keys
+## Running the relay from the source
 
-it will create a local database file to store the currently known rss feed urls.
+1. Clone this repository (or fork it).
+2. Set the `SECRET` environment variable (a random string to be used to generate virtual private keys).
+3. Set the following flags (may differ per environment):
+    ```shell
+    export CGO_ENABLED=1
+    export GOARCH=amd64
+    export GOOS=linux
+    ```
+4. Proceed to build the binary with the following command:
+    ```shell
+    go build -ldflags="-s -w -linkmode external -extldflags '-static'" -o ./rsslay
+    ```
 
-compiling
----------
+5. Run the relay!
+    ```shell
+    ./rsslay
+    ```
 
-if you know Go you already know this:
+_**Note:** it will create a local database file to store the currently known RSS feed URLs._
 
-    go install github.com/fiatjaf/relayer/rss-bridge
+## Running the relay from the package
 
-or something like that.
+1. Install the package:
+    ```shell
+    go install github.com/piraces/rsslay
+    ```
+2. Set the `SECRET` environment variable (a random string to be used to generate virtual private keys).
+3. Run it:
+    ```shell
+    rsslay
+    ```
+   
+
+# License
+
+[Unlicense](https://unlicense.org).
+

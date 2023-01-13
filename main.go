@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/nbd-wtf/go-nostr"
-	"log"
-	"sync"
-	"time"
-
 	"github.com/cockroachdb/pebble"
 	"github.com/fiatjaf/relayer"
 	"github.com/kelseyhightower/envconfig"
+	"github.com/nbd-wtf/go-nostr"
 	"golang.org/x/exp/slices"
+	"log"
+	"sync"
+	"time"
 )
 
 var relay = &Relay{
@@ -27,7 +26,7 @@ type Relay struct {
 	db          *pebble.DB
 }
 
-func (relay *Relay) Name() string {
+func (r *Relay) Name() string {
 	return "relayer-rss-bridge"
 }
 
@@ -36,8 +35,8 @@ func (r *Relay) OnInitialized(s *relayer.Server) {
 	s.Router().Path("/create").HandlerFunc(handleCreateFeed)
 }
 
-func (relay *Relay) Init() error {
-	err := envconfig.Process("", relay)
+func (r *Relay) Init() error {
+	err := envconfig.Process("", r)
 	if err != nil {
 		return fmt.Errorf("couldn't process envconfig: %w", err)
 	}
@@ -45,7 +44,7 @@ func (relay *Relay) Init() error {
 	if db, err := pebble.Open("db", nil); err != nil {
 		log.Fatalf("failed to open db: %v", err)
 	} else {
-		relay.db = db
+		r.db = db
 	}
 
 	go func() {
@@ -57,7 +56,7 @@ func (relay *Relay) Init() error {
 		for _, filter := range filters {
 			if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindTextNote) {
 				for _, pubkey := range filter.Authors {
-					if val, closer, err := relay.db.Get([]byte(pubkey)); err == nil {
+					if val, closer, err := r.db.Get([]byte(pubkey)); err == nil {
 						defer closer.Close()
 
 						var entity Entity
@@ -74,11 +73,11 @@ func (relay *Relay) Init() error {
 
 						for _, item := range feed.Items {
 							evt := itemToTextNote(pubkey, item)
-							last, ok := relay.lastEmitted.Load(entity.URL)
+							last, ok := r.lastEmitted.Load(entity.URL)
 							if !ok || time.Unix(last.(int64), 0).Before(evt.CreatedAt) {
-								evt.Sign(entity.PrivateKey)
-								relay.updates <- evt
-								relay.lastEmitted.Store(entity.URL, last)
+								_ = evt.Sign(entity.PrivateKey)
+								r.updates <- evt
+								r.lastEmitted.Store(entity.URL, last)
 							}
 						}
 					}
@@ -90,12 +89,12 @@ func (relay *Relay) Init() error {
 	return nil
 }
 
-func (relay *Relay) AcceptEvent(_ *nostr.Event) bool {
+func (r *Relay) AcceptEvent(_ *nostr.Event) bool {
 	return false
 }
 
-func (relay *Relay) Storage() relayer.Storage {
-	return store{relay.db}
+func (r *Relay) Storage() relayer.Storage {
+	return store{r.db}
 }
 
 type store struct {
@@ -144,7 +143,7 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 					continue
 				}
 
-				evt.Sign(entity.PrivateKey)
+				_ = evt.Sign(entity.PrivateKey)
 				evts = append(evts, evt)
 			}
 
@@ -160,7 +159,7 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 						continue
 					}
 
-					evt.Sign(entity.PrivateKey)
+					_ = evt.Sign(entity.PrivateKey)
 
 					if evt.CreatedAt.After(time.Unix(int64(last), 0)) {
 						last = uint32(evt.CreatedAt.Unix())
@@ -177,8 +176,8 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 	return evts, nil
 }
 
-func (relay *Relay) InjectEvents() chan nostr.Event {
-	return relay.updates
+func (r *Relay) InjectEvents() chan nostr.Event {
+	return r.updates
 }
 
 func main() {
