@@ -1,6 +1,6 @@
 # rsslay
 
-
+[![Fly Deploy](https://github.com/piraces/rsslay/actions/workflows/fly.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/fly.yml)
 
 **Relay that creates virtual nostr profiles for each RSS feed submitted**
 
