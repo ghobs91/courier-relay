@@ -19,7 +19,8 @@ var relay = &Relay{
 }
 
 type Relay struct {
-	Secret string `envconfig:"SECRET" required:"true"`
+	Secret            string `envconfig:"SECRET" required:"true"`
+	DatabaseDirectory string `envconfig:"DB_DIR" default:"db"`
 
 	updates     chan nostr.Event
 	lastEmitted sync.Map
@@ -27,12 +28,13 @@ type Relay struct {
 }
 
 func (r *Relay) Name() string {
-	return "relayer-rss-bridge"
+	return "rsslay"
 }
 
 func (r *Relay) OnInitialized(s *relayer.Server) {
 	s.Router().Path("/").HandlerFunc(handleWebpage)
 	s.Router().Path("/create").HandlerFunc(handleCreateFeed)
+	s.Router().Path("/favicon.ico").HandlerFunc(handleFavicon)
 }
 
 func (r *Relay) Init() error {
@@ -41,7 +43,7 @@ func (r *Relay) Init() error {
 		return fmt.Errorf("couldn't process envconfig: %w", err)
 	}
 
-	if db, err := pebble.Open("db", nil); err != nil {
+	if db, err := pebble.Open(r.DatabaseDirectory, nil); err != nil {
 		log.Fatalf("failed to open db: %v", err)
 	} else {
 		r.db = db

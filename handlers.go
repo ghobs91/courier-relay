@@ -102,3 +102,7 @@ func handleCreateFeed(w http.ResponseWriter, r *http.Request) {
 	entry.PubKey = publicKey
 	_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
 }
+
+func handleFavicon(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "assets/favicon.ico")
+}

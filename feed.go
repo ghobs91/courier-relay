@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -96,9 +97,14 @@ func feedToSetMetadata(pubkey string, feed *gofeed.Feed) nostr.Event {
 		"name":  feed.Title,
 		"about": feed.Description + "\n\n" + feed.Link,
 	}
+
+	defaultProfileImage := os.Getenv("DEFAULT_PROFILE_PICTURE_URL")
 	if feed.Image != nil {
 		metadata["picture"] = feed.Image.URL
+	} else if defaultProfileImage != "" {
+		metadata["picture"] = defaultProfileImage
 	}
+
 	content, _ := json.Marshal(metadata)
 
 	createdAt := time.Now()
