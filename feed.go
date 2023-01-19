@@ -137,7 +137,19 @@ func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed) nostr.E
 
 	// Handle Nitter duplicates
 	if strings.Contains(feed.Description, "Twitter feed") {
-		content = item.Description + "\n\n"
+		content = ""
+		if strings.Contains(item.Title, "RT by @") {
+			if len(item.DublinCoreExt.Creator) > 0 {
+				content = "**" + "RT " + item.DublinCoreExt.Creator[0] + ":**\n\n"
+			}
+		} else if strings.Contains(item.Title, "R to @") {
+			fields := strings.Fields(item.Title)
+			if len(fields) >= 2 {
+				replyingToHandle := fields[2]
+				content = "**" + "Response to " + replyingToHandle + ":**\n\n"
+			}
+		}
+		content += description
 	}
 
 	if len(content) > 250 {

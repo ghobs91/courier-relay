@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/json"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/nbd-wtf/go-nostr/nip19"
 	"html/template"
 	"log"
 	"net/http"
@@ -19,6 +20,7 @@ var t = template.Must(template.ParseFS(resources, "templates/*"))
 
 type Entry struct {
 	PubKey       string
+	NPubKey      string
 	Url          string
 	Error        bool
 	ErrorMessage string
@@ -39,9 +41,12 @@ func handleWebpage(w http.ResponseWriter, _ *http.Request) {
 			continue
 		}
 		count += 1
+		pubKey := string(iter.Key())
+		nPubKey, _ := nip19.EncodePublicKey(pubKey)
 		items = append(items, Entry{
-			PubKey: string(iter.Key()),
-			Url:    entity.URL,
+			PubKey:  pubKey,
+			NPubKey: nPubKey,
+			Url:     entity.URL,
 		})
 	}
 
@@ -103,10 +108,11 @@ func handleCreateFeed(w http.ResponseWriter, r *http.Request) {
 
 	entry.Url = feedUrl
 	entry.PubKey = publicKey
+	entry.NPubKey, _ = nip19.EncodePublicKey(publicKey)
 	_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
 }
 
-func handleFavicon(w http.ResponseWriter, r *http.Request) {
+func handleFavicon(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("content-type", "image/x-icon")
 	_, _ = w.Write(favicon)
 }

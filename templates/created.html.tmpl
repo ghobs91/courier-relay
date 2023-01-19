@@ -23,7 +23,7 @@
         {{else}}
             <div class="field is-horizontal">
               <div class="field-label is-normal">
-                <label class="label">Public Key</label>
+                <label class="label">Public Key (Hex)</label>
               </div>
               <div class="field-body">
                 <div class="field">
@@ -32,6 +32,19 @@
                   </p>
                 </div>
               </div>
+            </div>
+
+            <div class="field is-horizontal">
+                <div class="field-label is-normal">
+                    <label class="label">Public Key</label>
+                </div>
+                <div class="field-body">
+                    <div class="field">
+                        <p class="control">
+                            <input class="input is-static" type="text" value="{{.NPubKey}}" readonly>
+                        </p>
+                    </div>
+                </div>
             </div>
 
             <div class="field is-horizontal">

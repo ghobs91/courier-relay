@@ -27,20 +27,22 @@
         <h2 class="subtitle">How to use</h2>
         <div class="content">
             <ol>
-                <li>Get the blog URL or RSS or Atom feed URL and paste below</li>
-                <li>Click the button to get its corresponding public key</li>
-                <li>Add this relay to your Nostr client</li>
+                <li>Get the blog URL or RSS or Atom feed URL and paste it below.</li>
+                <li>Click the button to get its corresponding public key.</li>
+                <li>Add this relay to your Nostr client.</li>
                 <li>Follow the feed's public key from your Nostr client.</li>
             </ol>
         </div>
         <h2 class="subtitle">RSS is powerful!</h2>
         <div class="content">
-            <ol>
+            <h3 class="subtitle is-6">🍰 Everything is RSSible</h3>
+            <ul>
                 <li><b>For <a href="https://twitter.com/">Twitter</a> profiles:</b> get rss feed using <a href="https://nitter.net/">Nitter</a> (ex. <a href="https://nitter.net/Twitter/rss">https://nitter.net/Twitter/rss</a> for Twitter official account)</li>
                 <li><b>For <a href="https://joinmastodon.org/">Mastodon</a> profiles:</b> get the rss feed by adding ".rss" to the end of the url of someone's profile (ex. <a href="https://mastodon.social/@Gargron.rss">https://mastodon.social/@Gargron.rss</a>)</li>
                 <li><b>For <a href="https://www.scuttlebutt.nz/">ScuttleButt</a>:</b> get the rss feed using <a href="https://viewer.scuttlebot.io">https://viewer.scuttlebot.io</a></li>
                 <li><b>For sites missing a feed (with support for <a href="https://github.com/RSS-Bridge/rss-bridge/tree/master/bridges">several sites</a>), try using <a href="https://rss-bridge.github.io/rss-bridge/">RSS-Bridge</a>:</b> get the rss feed for your page (ex. <a href="https://rss-bridge.org/bridge01/?action=display&bridge=RedditBridge&context=single&r=nostr&f=&score=1&d=hot&search=&format=Atom">r/nostr in Reddit</a>) using any public instance (ex. <a href="https://rss-bridge.org/bridge01/">public bridge</a>)</li>
-            </ol>
+                <li><b><a href="https://rsshub.app/">RssHub</a> it's capable of generating RSS feeds from pretty much everything too</b>, check it how to use it in <a href="https://docs.rsshub.app/">https://docs.rsshub.app</a> (ex. <a href="https://rsshub.app/github/topics/nostr">repos inside nostr topic in GitHub</a>)</li>
+            </ul>
         </div>
         <div class="content">
             <form action="/create" method="GET" class="control">
@@ -59,6 +61,7 @@
         <table class="table">
             <tbody>
                 <tr>
+                    <th>Public key (Hex)</th>
                     <th>Public key</th>
                     <th>Feed URL</th>
                 </tr>
@@ -66,7 +69,9 @@
                 <tr>
                     <td><a href="https://www.nostr.guru/p/{{.PubKey}}" style="word-break: break-all;">{{.PubKey}}</a>
                     </td>
-                    <td><a href="{{.Url}}">{{.Url}}</a>
+                    <td><a href="https://www.nostr.guru/{{.NPubKey}}" style="word-break: break-all;">{{.NPubKey}}</a>
+                    </td>
+                    <td><a href="{{.Url}}" style="word-break: break-all;">{{.Url}}</a>
                     </td>
                 </tr>
                 {{end}}
