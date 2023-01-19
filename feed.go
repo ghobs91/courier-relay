@@ -124,7 +124,7 @@ func feedToSetMetadata(pubkey string, feed *gofeed.Feed) nostr.Event {
 	return evt
 }
 
-func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed) nostr.Event {
+func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, defaultCreatedAt time.Time) nostr.Event {
 	content := ""
 	if item.Title != "" {
 		content = "**" + item.Title + "**\n\n"
@@ -157,7 +157,7 @@ func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed) nostr.E
 	}
 	content += "\n\n" + item.Link
 
-	createdAt := time.Now()
+	createdAt := defaultCreatedAt
 	if item.UpdatedParsed != nil {
 		createdAt = *item.UpdatedParsed
 	}
