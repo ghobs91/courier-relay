@@ -124,7 +124,7 @@ func feedToSetMetadata(pubkey string, feed *gofeed.Feed) nostr.Event {
 	return evt
 }
 
-func itemToTextNote(pubkey string, item *gofeed.Item) nostr.Event {
+func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed) nostr.Event {
 	content := ""
 	if item.Title != "" {
 		content = "**" + item.Title + "**\n\n"
@@ -133,6 +133,11 @@ func itemToTextNote(pubkey string, item *gofeed.Item) nostr.Event {
 
 	if !strings.EqualFold(item.Title, description) {
 		content += description
+	}
+
+	// Handle Nitter duplicates
+	if strings.Contains(feed.Description, "Twitter feed") {
+		content = item.Description + "\n\n"
 	}
 
 	if len(content) > 250 {

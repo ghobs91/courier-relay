@@ -74,7 +74,7 @@ func (r *Relay) Init() error {
 						}
 
 						for _, item := range feed.Items {
-							evt := itemToTextNote(pubkey, item)
+							evt := itemToTextNote(pubkey, item, feed)
 							last, ok := r.lastEmitted.Load(entity.URL)
 							if !ok || time.Unix(last.(int64), 0).Before(evt.CreatedAt) {
 								_ = evt.Sign(entity.PrivateKey)
@@ -152,7 +152,7 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 			if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindTextNote) {
 				var last uint32 = 0
 				for _, item := range feed.Items {
-					evt := itemToTextNote(pubkey, item)
+					evt := itemToTextNote(pubkey, item, feed)
 
 					if filter.Since != nil && evt.CreatedAt.Before(*filter.Since) {
 						continue
