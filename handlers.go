@@ -12,6 +12,9 @@ import (
 //go:embed templates/*
 var resources embed.FS
 
+//go:embed assets/favicon.ico
+var favicon []byte
+
 var t = template.Must(template.ParseFS(resources, "templates/*"))
 
 type Entry struct {
@@ -104,5 +107,6 @@ func handleCreateFeed(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleFavicon(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "assets/favicon.ico")
+	w.Header().Set("content-type", "image/x-icon")
+	_, _ = w.Write(favicon)
 }
