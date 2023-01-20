@@ -1,0 +1,19 @@
+name: CI Dive Check
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build image
+        run: docker build -t rsslay:temp .
+      - name: Dive
+        run: docker run -e CI=true -e DOCKER_API_VERSION=1.37 --rm -v /var/run/docker.sock:/var/run/docker.sock --mount type=bind,source=/home/runner/work/rsslay/rsslay/.dive-ci.yml,target=/.dive-ci wagoodman/dive:latest rsslay:temp --ci-config /.dive-ci
