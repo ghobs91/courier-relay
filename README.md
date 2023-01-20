@@ -39,6 +39,27 @@ _**Note:** it will create a local database file to store the currently known RSS
 - `DB_DIR`: directory where the database should be created, defaults to `.\db`.
 - `DEFAULT_PROFILE_PICTURE_URL`: default profile picture URL for feeds that don't have an image.
 
+## Running with Docker
+
+_**Note:** you can skip step 2 and 3 and directly go and run:_
+```shell
+docker build github.com/piraces/rsslay -t rsslay
+```
+
+1. Make sure you have already installed [Docker](https://docs.docker.com/engine/install/).
+2. Clone this repository (or fork it).
+3. Perform a docker build:
+   ```shell
+   docker build . -t rsslay
+   ```
+4. Copy the `.env.sample` file to `.env` and replace the variable values as needed.
+5. Run the final image!
+   ```shell
+   # This will run in "detached" mode exposing the port 8080, change the port as needed
+   docker run -d --env-file .env -p 8080:8080 --name rsslay rsslay
+   ```
+6. Now you can access the instance in `localhost:8080` (or other port you choose).
+
 ## Deploying easily to [fly.io](https://fly.io/)
 
 I'm currently deploying a little instance of rsslay into [fly.io](https://fly.io/), so I made it simple to 
