@@ -1,6 +1,8 @@
 # rsslay
 
 [![Fly Deploy](https://github.com/piraces/rsslay/actions/workflows/fly.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/fly.yml)
+[![CI Dive Check](https://github.com/piraces/rsslay/actions/workflows/dive-check.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/dive-check.yml)
+[![Publish Docker image](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml)
 
 **Relay that creates virtual nostr profiles for each RSS feed submitted**
 
@@ -85,6 +87,18 @@ The requisites are the following:
 10. **Optional:** [set up a workflow in GitHub to automatically deploy your app](https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/) like in this repo.
 
 You are done!
+
+# Contributing
+
+Feel free to [open an issue](https://github.com/piraces/rsslay/issues/new), provide feedback in [discussions](https://github.com/piraces/rsslay/discussions), or fork the repo and open a PR with your contribution!
+
+**All kinds of contributions are welcome!**
+
+# Contact
+
+You can reach me on nostr [`npub1ftpy6thgy2354xypal6jd0m37wtsgsvcxljvzje5vskc9cg3a5usexrrtq`](https://snort.social/p/npub1ftpy6thgy2354xypal6jd0m37wtsgsvcxljvzje5vskc9cg3a5usexrrtq)
+
+Also on [the bird site](https://twitter.com/piraces_), and [Mastodon](https://hachyderm.io/@piraces).
 
 # License
 
