@@ -3,6 +3,7 @@
 [![Fly Deploy](https://github.com/piraces/rsslay/actions/workflows/fly.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/fly.yml)
 [![CI Dive Check](https://github.com/piraces/rsslay/actions/workflows/dive-check.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/dive-check.yml)
 [![Publish Docker image](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml)
+![Docker Hub](https://img.shields.io/docker/pulls/piraces/rsslay?logo=docker)
 
 **Relay that creates virtual nostr profiles for each RSS feed submitted**
 
@@ -43,7 +44,36 @@ _**Note:** it will create a local database file to store the currently known RSS
 
 ## Running with Docker
 
-_**Note:** you can skip step 2 and 3 and directly go and run:_
+The Docker image for this project is published in [GitHub Packages](https://github.com/piraces/rsslay/pkgs/container/rsslay) and [Docker Hub](https://hub.docker.com/r/piraces/rsslay), so you can directly
+pull the image from that feeds.
+
+Nevertheless, you can always use the git repository and its source code to build and run it by yourself.
+
+### From the published releases
+
+1. Pull the image from GitHub or Docker Hub (both are the same):
+   ```shell
+   # From GitHub (you can change the tag to a specific version)
+   docker pull ghcr.io/piraces/rsslay:latest
+   ```
+   ```shell
+   # From DockerHub (you can change the tag to a specific version)
+   docker pull piraces/rsslay:latest
+   ```
+2. Copy the `.env.sample` file to `.env` and replace the variable values as needed.
+3. Run the final image!
+   ```shell
+   # This will run in "detached" mode exposing the port 8080, change the port as needed
+   # In case you downloaded the image from DockerHub
+   docker run -d --env-file .env -p 8080:8080 --name rsslay piraces/rsslay:latest
+   # If you downloaded the image from GitHub
+   docker run -d --env-file .env -p 8080:8080 --name rsslay ghcr.io/piraces/rsslay:latest
+   ```
+4. Now you can access the instance in `localhost:8080` (or other port you choose).
+
+### Directly from the repository
+
+_**Note:** you can skip step 2 and 3 from below and directly go and run:_
 ```shell
 docker build github.com/piraces/rsslay -t rsslay
 ```

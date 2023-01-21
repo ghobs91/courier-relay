@@ -1,15 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/cockroachdb/pebble"
 	"github.com/fiatjaf/relayer"
+	"github.com/hellofresh/health-go/v5"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/nbd-wtf/go-nostr"
 	"golang.org/x/exp/slices"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
@@ -21,10 +24,28 @@ var relay = &Relay{
 type Relay struct {
 	Secret            string `envconfig:"SECRET" required:"true"`
 	DatabaseDirectory string `envconfig:"DB_DIR" default:"db"`
+	Version           string `envconfig:"VERSION" default:"unknown"`
 
 	updates     chan nostr.Event
 	lastEmitted sync.Map
 	db          *pebble.DB
+	healthCheck *health.Health
+}
+
+func CreateHealthCheck() {
+	h, _ := health.New(health.WithComponent(health.Component{
+		Name:    "rsslay",
+		Version: os.Getenv("VERSION"),
+	}), health.WithChecks(health.Config{
+		Name:      "self",
+		Timeout:   time.Second * 5,
+		SkipOnErr: false,
+		Check: func(ctx context.Context) error {
+			return nil
+		},
+	},
+	))
+	relay.healthCheck = h
 }
 
 func (r *Relay) Name() string {
@@ -35,6 +56,7 @@ func (r *Relay) OnInitialized(s *relayer.Server) {
 	s.Router().Path("/").HandlerFunc(handleWebpage)
 	s.Router().Path("/create").HandlerFunc(handleCreateFeed)
 	s.Router().Path("/favicon.ico").HandlerFunc(handleFavicon)
+	s.Router().Path("/healthz").HandlerFunc(r.healthCheck.HandlerFunc)
 }
 
 func (r *Relay) Init() error {
@@ -190,6 +212,7 @@ func (r *Relay) InjectEvents() chan nostr.Event {
 }
 
 func main() {
+	CreateHealthCheck()
 	if err := relayer.Start(relay); err != nil {
 		log.Fatalf("server terminated: %v", err)
 	}
