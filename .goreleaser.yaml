@@ -1,11 +1,13 @@
 builds:
-  - binary: rsslay
-    ldflags:
-      - -s -w -linkmode external -extldflags '-static' -X 'github.com/piraces/rsslay/pkg/version.BuildVersion=0.2.1'
-    env: [CGO_ENABLED=1,VERSION=0.2.1]
-    goos:
-      - linux
-      - windows
-      - darwin
-    goarch:
-      - amd64
+- id: rsslay-linux
+  ldflags:
+    - -s -w -linkmode external -extldflags '-static' -X 'github.com/piraces/rsslay/pkg/version.BuildVersion={{.Version}}'
+  env:
+    - CGO_ENABLED=1
+  goos:
+    - linux
+  ignore:
+    - goos: linux
+      goarch: 386
+    - goos: linux
+      goarch: arm64
