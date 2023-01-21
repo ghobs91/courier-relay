@@ -16,7 +16,7 @@ RUN apk add --no-cache build-base
 
 RUN CGO_ENABLED=1 go build -ldflags="-s -w -linkmode external -extldflags '-static'" -o /rsslay
 
-FROM gcr.io/distroless/cc:latest
+FROM alpine:latest
 
 LABEL org.opencontainers.image.title="rsslay"
 LABEL org.opencontainers.image.source=https://github.com/piraces/rsslay
