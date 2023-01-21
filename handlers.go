@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"net/url"
 )
 
 //go:embed templates/*
@@ -83,9 +82,7 @@ func handleFavicon(w http.ResponseWriter, _ *http.Request) {
 }
 
 func handleApiFeed(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		handleGetFeedEntry(w, r)
-	} else if r.Method == http.MethodPost {
+	if r.Method == http.MethodGet || r.Method == http.MethodPost {
 		handleCreateFeedEntry(w, r)
 	} else {
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
@@ -105,48 +102,6 @@ func handleCreateFeedEntry(w http.ResponseWriter, r *http.Request) {
 
 	response, _ := json.Marshal(entry)
 	_, _ = w.Write(response)
-}
-
-func handleGetFeedEntry(w http.ResponseWriter, r *http.Request) {
-	feedUrl := r.URL.Query().Get("url")
-	if feedUrl == "" {
-		http.Error(w, "The query parameter 'url' is mandatory", http.StatusBadRequest)
-		return
-	}
-	_, err := url.Parse(feedUrl)
-	if err != nil {
-		http.Error(w, "The query parameter 'url' is not a valid URL", http.StatusBadRequest)
-		return
-	}
-	sk := privateKeyFromFeed(feedUrl)
-	publicKey, err := nostr.GetPublicKey(sk)
-	if err != nil {
-		http.Error(w, "Unable to process query for url: "+feedUrl, http.StatusInternalServerError)
-		return
-	}
-
-	entry, i, err := relay.db.Get([]byte(publicKey))
-	defer i.Close()
-	if err != nil {
-		http.Error(w, "Unable to get entry for url: "+feedUrl, http.StatusInternalServerError)
-		return
-	}
-	var entity Entity
-	if err := json.Unmarshal(entry, &entity); err != nil {
-		log.Printf("got invalid json from db at key %s: %v", publicKey, err)
-		http.Error(w, "Unable to get entry for url: "+feedUrl, http.StatusInternalServerError)
-		return
-	}
-	encodedPublicKey, _ := nip19.EncodePublicKey(publicKey)
-	response, _ := json.Marshal(Entry{
-		PubKey:  publicKey,
-		NPubKey: encodedPublicKey,
-		Url:     entity.URL,
-	})
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(response)
-	return
 }
 
 func createFeedEntry(url string) *Entry {
