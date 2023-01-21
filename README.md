@@ -13,6 +13,8 @@
   - Doesn't accept any events, only emits them.
   - Does so by manually reading and parsing RSS feeds.
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/UDf6vC?referralCode=Zbo_gO)
+
 ![Screenshot of main page](screenshot.png)
 
 ## Running the relay from the source
