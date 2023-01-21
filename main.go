@@ -57,6 +57,7 @@ func (r *Relay) OnInitialized(s *relayer.Server) {
 	s.Router().Path("/create").HandlerFunc(handleCreateFeed)
 	s.Router().Path("/favicon.ico").HandlerFunc(handleFavicon)
 	s.Router().Path("/healthz").HandlerFunc(r.healthCheck.HandlerFunc)
+	s.Router().Path("/api/feed").HandlerFunc(handleApiFeed)
 }
 
 func (r *Relay) Init() error {

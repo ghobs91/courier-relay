@@ -17,6 +17,51 @@
 
 ![Screenshot of main page](screenshot.png)
 
+## API
+
+`rsslay` exposes an API to work with it programmatically, so you can automate feed creation and retrieval.
+The following operations are available:
+
+### Get a existing feed information
+
+_**Note:** the feed must already be created, if not exists it will return `404 - Not found`_
+
+- Path: `/api/feed`
+- Method: `GET`
+- Query params **(mandatory)**: `url`
+- Example: `GET https://rsslay.nostr.moe/api/feed?url=https://www.engadget.com/rss.xml`
+- Result: `application/json`
+- Example result: 
+   ```json
+   {
+     "PubKey": "1e630062dd55226058224a0a1e9b54e09ac121ed13dd5070758816a9c561aeab",
+     "NPubKey": "npub1re3sqcka253xqkpzfg9pax65uzdvzg0dz0w4qur43qt2n3tp464sswsn92",
+     "Url": "https://www.engadget.com/rss.xml",
+     "Error": false,
+     "ErrorMessage": "", 
+     "ErrorCode": 0
+   }
+   ```
+
+### Create a feed
+
+- Path: `/api/feed`
+- Method: `POST`
+- Query params **(mandatory)**: `url`
+- Example: `POST https://rsslay.nostr.moe/api/feed?url=https://www.engadget.com/rss.xml`
+- Result: `application/json`
+- Example result:
+   ```json
+   {
+     "PubKey": "1e630062dd55226058224a0a1e9b54e09ac121ed13dd5070758816a9c561aeab",
+     "NPubKey": "npub1re3sqcka253xqkpzfg9pax65uzdvzg0dz0w4qur43qt2n3tp464sswsn92",
+     "Url": "https://www.engadget.com/rss.xml",
+     "Error": false,
+     "ErrorMessage": "", 
+     "ErrorCode": 0
+   }
+   ```
+
 ## Running the relay from the source
 
 1. Clone this repository (or fork it).

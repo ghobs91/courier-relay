@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 )
 
 //go:embed templates/*
@@ -24,6 +25,7 @@ type Entry struct {
 	Url          string
 	Error        bool
 	ErrorMessage string
+	ErrorCode    int
 }
 
 type PageData struct {
@@ -37,7 +39,18 @@ func handleWebpage(w http.ResponseWriter, _ *http.Request) {
 	var items []Entry
 	for iter.First(); iter.Valid(); iter.Next() {
 		var entity Entity
-		if err := json.Unmarshal(iter.Value(), &entity); err != nil {
+		err := iter.Error()
+		point, hasRange := iter.HasPointAndRange()
+		if err != nil && point && hasRange {
+			continue
+		}
+
+		entry, err := iter.ValueAndErr()
+		if err != nil {
+			continue
+		}
+
+		if err := json.Unmarshal(entry, &entity); err != nil {
 			continue
 		}
 		count += 1
@@ -59,36 +72,109 @@ func handleWebpage(w http.ResponseWriter, _ *http.Request) {
 }
 
 func handleCreateFeed(w http.ResponseWriter, r *http.Request) {
-	url := r.URL.Query().Get("url")
+	urlParam := r.URL.Query().Get("url")
+	entry := createFeedEntry(urlParam)
+	_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
+}
 
+func handleFavicon(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Set("Content-Type", "image/x-icon")
+	_, _ = w.Write(favicon)
+}
+
+func handleApiFeed(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		handleGetFeedEntry(w, r)
+	} else if r.Method == http.MethodPost {
+		handleCreateFeedEntry(w, r)
+	} else {
+		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
+	}
+}
+
+func handleCreateFeedEntry(w http.ResponseWriter, r *http.Request) {
+	urlParam := r.URL.Query().Get("url")
+	entry := createFeedEntry(urlParam)
+	w.Header().Set("Content-Type", "application/json")
+
+	if entry.ErrorCode >= 400 {
+		w.WriteHeader(entry.ErrorCode)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	response, _ := json.Marshal(entry)
+	_, _ = w.Write(response)
+}
+
+func handleGetFeedEntry(w http.ResponseWriter, r *http.Request) {
+	feedUrl := r.URL.Query().Get("url")
+	if feedUrl == "" {
+		http.Error(w, "The query parameter 'url' is mandatory", http.StatusBadRequest)
+		return
+	}
+	_, err := url.Parse(feedUrl)
+	if err != nil {
+		http.Error(w, "The query parameter 'url' is not a valid URL", http.StatusBadRequest)
+		return
+	}
+	sk := privateKeyFromFeed(feedUrl)
+	publicKey, err := nostr.GetPublicKey(sk)
+	if err != nil {
+		http.Error(w, "Unable to process query for url: "+feedUrl, http.StatusInternalServerError)
+		return
+	}
+
+	entry, i, err := relay.db.Get([]byte(publicKey))
+	defer i.Close()
+	if err != nil {
+		http.Error(w, "Unable to get entry for url: "+feedUrl, http.StatusInternalServerError)
+		return
+	}
+	var entity Entity
+	if err := json.Unmarshal(entry, &entity); err != nil {
+		log.Printf("got invalid json from db at key %s: %v", publicKey, err)
+		http.Error(w, "Unable to get entry for url: "+feedUrl, http.StatusInternalServerError)
+		return
+	}
+	encodedPublicKey, _ := nip19.EncodePublicKey(publicKey)
+	response, _ := json.Marshal(Entry{
+		PubKey:  publicKey,
+		NPubKey: encodedPublicKey,
+		Url:     entity.URL,
+	})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(response)
+	return
+}
+
+func createFeedEntry(url string) *Entry {
 	entry := Entry{
 		Error: false,
 	}
 	feedUrl := getFeedURL(url)
 	if feedUrl == "" {
-		w.WriteHeader(400)
+		entry.ErrorCode = http.StatusBadRequest
 		entry.Error = true
 		entry.ErrorMessage = "Could not find a feed URL in there..."
-		_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
-		return
+		return &entry
 	}
 
 	if _, err := parseFeed(feedUrl); err != nil {
-		w.WriteHeader(400)
+		entry.ErrorCode = http.StatusBadRequest
 		entry.Error = true
 		entry.ErrorMessage = "Bad feed: " + err.Error()
-		_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
-		return
+		return &entry
 	}
 
 	sk := privateKeyFromFeed(feedUrl)
 	publicKey, err := nostr.GetPublicKey(sk)
 	if err != nil {
-		w.WriteHeader(500)
+		entry.ErrorCode = http.StatusInternalServerError
 		entry.Error = true
 		entry.ErrorMessage = "bad private key: " + err.Error()
-		_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
-		return
+		return &entry
 	}
 
 	j, _ := json.Marshal(Entity{
@@ -97,11 +183,10 @@ func handleCreateFeed(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err := relay.db.Set([]byte(publicKey), j, nil); err != nil {
-		w.WriteHeader(500)
+		entry.ErrorCode = http.StatusInternalServerError
 		entry.Error = true
 		entry.ErrorMessage = "failure: " + err.Error()
-		_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
-		return
+		return &entry
 	}
 
 	log.Printf("saved feed at url %q as publicKey %s", feedUrl, publicKey)
@@ -109,10 +194,5 @@ func handleCreateFeed(w http.ResponseWriter, r *http.Request) {
 	entry.Url = feedUrl
 	entry.PubKey = publicKey
 	entry.NPubKey, _ = nip19.EncodePublicKey(publicKey)
-	_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
-}
-
-func handleFavicon(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("content-type", "image/x-icon")
-	_, _ = w.Write(favicon)
+	return &entry
 }
