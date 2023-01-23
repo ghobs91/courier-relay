@@ -64,6 +64,8 @@ func (r *Relay) Init() error {
 	err := envconfig.Process("", r)
 	if err != nil {
 		return fmt.Errorf("couldn't process envconfig: %w", err)
+	} else {
+		fmt.Printf("Running VERSION %s:\n - SECRET=%s\n - DB_DIR=%s\n", r.Version, r.Secret, r.DatabaseDirectory)
 	}
 
 	if db, err := pebble.Open(r.DatabaseDirectory, nil); err != nil {
