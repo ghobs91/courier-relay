@@ -3,6 +3,7 @@ package main
 import (
 	"embed"
 	"encoding/json"
+	"github.com/cockroachdb/pebble"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip19"
 	"html/template"
@@ -137,14 +138,19 @@ func createFeedEntry(url string) *Entry {
 		URL:        feedUrl,
 	})
 
-	if err := relay.db.Set([]byte(publicKey), j, nil); err != nil {
-		entry.ErrorCode = http.StatusInternalServerError
-		entry.Error = true
-		entry.ErrorMessage = "failure: " + err.Error()
-		return &entry
+	foundEntry, _, err := relay.db.Get([]byte(publicKey))
+	if err == pebble.ErrNotFound {
+		log.Printf("not found feed at url %q as publicKey %s", feedUrl, publicKey)
+		if err := relay.db.Set([]byte(publicKey), j, nil); err != nil {
+			entry.ErrorCode = http.StatusInternalServerError
+			entry.Error = true
+			entry.ErrorMessage = "failure: " + err.Error()
+			return &entry
+		}
+		log.Printf("saved feed at url %q as publicKey %s", feedUrl, publicKey)
+	} else if len(foundEntry) > 0 {
+		log.Printf("found feed at url %q as publicKey %s", feedUrl, publicKey)
 	}
-
-	log.Printf("saved feed at url %q as publicKey %s", feedUrl, publicKey)
 
 	entry.Url = feedUrl
 	entry.PubKey = publicKey

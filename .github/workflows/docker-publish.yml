@@ -52,3 +52,14 @@ jobs:
           platforms: linux/amd64,linux/arm64/v8
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure upgrade revision
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az containerapp revision copy -n ${{ secrets.AZURE_APP_NAME }} -g ${{ secrets.AZURE_RESOURCE_GROUP }} --replace-env-vars VERSION=${{  github.ref_name }}
