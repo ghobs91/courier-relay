@@ -237,31 +237,29 @@ func createFeedEntry(r *http.Request) *Entry {
 	}
 
 	publicKey = strings.TrimSpace(publicKey)
+	defer insertFeed(err, feedUrl, publicKey, sk)
+
+	entry.Url = feedUrl
+	entry.PubKey = publicKey
+	entry.NPubKey, _ = nip19.EncodePublicKey(publicKey)
+	return &entry
+}
+
+func insertFeed(err error, feedUrl string, publicKey string, sk string) {
 	row := relay.db.QueryRow("SELECT privatekey, url FROM feeds WHERE publickey=$1", publicKey)
 
 	var entity Entity
 	err = row.Scan(&entity.PrivateKey, &entity.URL)
 	if err != nil && err == sql.ErrNoRows {
 		log.Printf("not found feed at url %q as publicKey %s", feedUrl, publicKey)
-		if _, err := relay.db.ExecContext(r.Context(), `INSERT INTO feeds (publickey, privatekey, url) VALUES (?, ?, ?)`, publicKey, sk, feedUrl); err != nil {
-			entry.ErrorCode = http.StatusInternalServerError
-			entry.Error = true
-			entry.ErrorMessage = "failure: " + err.Error()
-			return &entry
+		if _, err := relay.db.Exec(`INSERT INTO feeds (publickey, privatekey, url) VALUES (?, ?, ?)`, publicKey, sk, feedUrl); err != nil {
+			log.Printf("failure: " + err.Error())
 		} else {
 			log.Printf("saved feed at url %q as publicKey %s", feedUrl, publicKey)
-			entry.Url = feedUrl
-			entry.PubKey = publicKey
-			entry.NPubKey, _ = nip19.EncodePublicKey(publicKey)
-			return &entry
 		}
 	} else if err != nil {
 		log.Fatalf("failed when trying to retrieve row with pubkey '%s': %v", publicKey, err)
+	} else {
+		log.Printf("found feed at url %q as publicKey %s", feedUrl, publicKey)
 	}
-
-	log.Printf("found feed at url %q as publicKey %s", feedUrl, publicKey)
-	entry.Url = feedUrl
-	entry.PubKey = publicKey
-	entry.NPubKey, _ = nip19.EncodePublicKey(publicKey)
-	return &entry
 }
