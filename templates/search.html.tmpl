@@ -23,6 +23,12 @@
                     <p class="title">{{.Count}}</p>
                 </div>
             </div>
+            <div class="level-item has-text-centered">
+                <div>
+                    <p class="heading">Matched feeds count</p>
+                    <p class="title">{{.FilteredCount}}</p>
+                </div>
+            </div>
         </nav>
         <h2 class="subtitle">How to use</h2>
         <div class="content">
@@ -47,7 +53,7 @@
         <div class="content">
             <form action="/create" method="GET" class="control">
                 <div class="field">
-                    <div class="control"><label><input class="input is-link is-normal" name="url" type="url"
+                    <div class="control">Search by URL (if you want to search by key you can use a normal client):<label><input class="input is-link is-normal" name="url" type="url"
                                 placeholder="https://example.com/feed"></label></div>
                 </div>
                 <div class="field">
@@ -57,11 +63,11 @@
                 </div>
             </form>
         </div>
-        <h2 class="subtitle">Some of the existing feeds (first 50)</h2>
+        <h2 class="subtitle">Found feeds (showing a maximum of 50, refine your query if necessary)</h2>
         <div class="content">
             <form action="/search" method="GET" class="control">
                 <div class="field">
-                    <div class="control">Search by URL (if you want to search by key you can use a normal client):<label><input class="input is-link is-normal" name="query" type="text"
+                    <div class="control"><label><input class="input is-link is-normal" name="query" type="text"
                                                        placeholder="bitcoin"></label></div>
                 </div>
                 <div class="field">

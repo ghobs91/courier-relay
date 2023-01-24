@@ -71,7 +71,7 @@ _**Note:** it will create a local database file to store the currently known RSS
 
 ### Environment variables used
 - `SECRET`: **mandatory**, a random string to be used to generate virtual private keys.
-- `DB_DIR`: directory where the database should be created, defaults to `.\db`.
+- `DB_DIR`: path with filename where the database should be created, defaults to `.\db\rsslay.sqlite`.
 - `DEFAULT_PROFILE_PICTURE_URL`: default profile picture URL for feeds that don't have an image.
 
 ## Running with Docker
@@ -124,15 +124,15 @@ docker build github.com/piraces/rsslay -t rsslay
    ```
 6. Now you can access the instance in `localhost:8080` (or other port you choose).
 
-## Deploying easily to [fly.io](https://fly.io/)
+## Deploying easily with [litefs](https://fly.io/docs/litefs/getting-started/) to [fly.io](https://fly.io/)
 
-I'm currently deploying a little instance of rsslay into [fly.io](https://fly.io/), so I made it simple to 
+I'm currently deploying an instance of rsslay into [fly.io](https://fly.io/), so I made it simple to 
 everyone to deploy to there.
 
 The requisites are the following:
 - An account in fly.io.
 - An app instance previously created.
-- A little volume to handle the database files between deployments, restarts and others.
+- A volume to handle the database files between deployments, restarts and others.
 - (Optional) a custom domain of our own that we can set a CNAME record to and avoid using the default domain.
 
 ### Setting up the app
@@ -141,14 +141,13 @@ The requisites are the following:
 2. Login into your account with `flyctl auth login`.
 3. Modify the file `fly.toml` replacing the property `app` with your app name.
 4. Create a new volume for your app with `flyctl volumes create rsslay_data` (the name `rsslay_data` can be changed).
-5. Modify the file `fly.toml` and set the section `[mounts]` accordingly (the `source` property with the volume name and the `destination` with where do you want it to be mounted).
+5. Modify the file `fly.toml` and set the section `[mounts]` accordingly (the `source` property with the volume name and **keep `destination` as it is due to LiteFS usage**).
 6. Create a secret with `flyctl secrets set SECRET=YOUR_LONG_STRING_HERE`, in order to establish the `SECRET` environment variable to create private keys with.
-7. In the `[env]` section set `DB_DIR` to the folder you mounted the volume to.
-8. Proceed with the automatic deployment with `flyctl launch`
-9. **Optional:** set up a CNAME record and [set a certificate for the app](https://fly.io/docs/app-guides/custom-domains-with-fly/#creating-a-custom-domain-on-fly-manually).
-10. **Optional:** [set up a workflow in GitHub to automatically deploy your app](https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/) like in this repo.
+7. Proceed with the automatic deployment with `flyctl launch`
+8. **Optional:** set up a CNAME record and [set a certificate for the app](https://fly.io/docs/app-guides/custom-domains-with-fly/#creating-a-custom-domain-on-fly-manually).
+9. **Optional:** [set up a workflow in GitHub to automatically deploy your app](https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/) like in this repo.
 
-You are done!
+You are done! And you can scale your app simply following [this steps](https://fly.io/docs/litefs/example/#scaling-up-your-app)!
 
 # Contributing
 

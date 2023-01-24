@@ -2,20 +2,32 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"database/sql"
+	_ "embed"
 	"errors"
+	"flag"
 	"fmt"
-	"github.com/cockroachdb/pebble"
 	"github.com/fiatjaf/relayer"
 	"github.com/hellofresh/health-go/v5"
 	"github.com/kelseyhightower/envconfig"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/nbd-wtf/go-nostr"
 	"golang.org/x/exp/slices"
 	"log"
 	"os"
+	"path"
+	"strings"
 	"sync"
 	"time"
 )
+
+// Command line flags.
+var (
+	dsn = flag.String("dsn", "", "datasource name")
+)
+
+//go:embed schema.sql
+var schemaSQL string
 
 var relay = &Relay{
 	updates: make(chan nostr.Event),
@@ -23,12 +35,12 @@ var relay = &Relay{
 
 type Relay struct {
 	Secret            string `envconfig:"SECRET" required:"true"`
-	DatabaseDirectory string `envconfig:"DB_DIR" default:"db"`
+	DatabaseDirectory string `envconfig:"DB_DIR" default:"db/rsslay.sqlite"`
 	Version           string `envconfig:"VERSION" default:"unknown"`
 
 	updates     chan nostr.Event
 	lastEmitted sync.Map
-	db          *pebble.DB
+	db          *sql.DB
 	healthCheck *health.Health
 }
 
@@ -55,24 +67,22 @@ func (r *Relay) Name() string {
 func (r *Relay) OnInitialized(s *relayer.Server) {
 	s.Router().Path("/").HandlerFunc(handleWebpage)
 	s.Router().Path("/create").HandlerFunc(handleCreateFeed)
+	s.Router().Path("/search").HandlerFunc(handleSearch)
 	s.Router().Path("/favicon.ico").HandlerFunc(handleFavicon)
 	s.Router().Path("/healthz").HandlerFunc(r.healthCheck.HandlerFunc)
 	s.Router().Path("/api/feed").HandlerFunc(handleApiFeed)
 }
 
 func (r *Relay) Init() error {
+	flag.Parse()
 	err := envconfig.Process("", r)
 	if err != nil {
 		return fmt.Errorf("couldn't process envconfig: %w", err)
 	} else {
-		fmt.Printf("Running VERSION %s:\n - DB_DIR=%s\n", r.Version, r.DatabaseDirectory)
+		fmt.Printf("Running VERSION %s:\n - DSN=%s\n - DB_DIR=%s\n\n", r.Version, *dsn, r.DatabaseDirectory)
 	}
 
-	if db, err := pebble.Open(r.DatabaseDirectory, nil); err != nil {
-		log.Fatalf("failed to open db: %v", err)
-	} else {
-		r.db = db
-	}
+	r.db = InitDatabase(r)
 
 	go func() {
 		time.Sleep(20 * time.Minute)
@@ -83,30 +93,31 @@ func (r *Relay) Init() error {
 		for _, filter := range filters {
 			if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindTextNote) {
 				for _, pubkey := range filter.Authors {
-					if val, closer, err := r.db.Get([]byte(pubkey)); err == nil {
-						defer closer.Close()
+					pubkey = strings.TrimSpace(pubkey)
+					row := r.db.QueryRow("SELECT privatekey, url FROM feeds WHERE publickey=$1", pubkey)
 
-						var entity Entity
-						if err := json.Unmarshal(val, &entity); err != nil {
-							log.Printf("got invalid json from db at key %s: %v", pubkey, err)
-							continue
-						}
+					var entity Entity
+					err := row.Scan(&entity.PrivateKey, &entity.URL)
+					if err != nil && err == sql.ErrNoRows {
+						continue
+					} else if err != nil {
+						log.Fatalf("failed when trying to retrieve row with pubkey '%s': %v", pubkey, err)
+					}
 
-						feed, err := parseFeed(entity.URL)
-						if err != nil {
-							log.Printf("failed to parse feed at url %q: %v", entity.URL, err)
-							continue
-						}
+					feed, err := parseFeed(entity.URL)
+					if err != nil {
+						log.Printf("failed to parse feed at url %q: %v", entity.URL, err)
+						continue
+					}
 
-						for _, item := range feed.Items {
-							defaultCreatedAt := time.Now()
-							evt := itemToTextNote(pubkey, item, feed, defaultCreatedAt)
-							last, ok := r.lastEmitted.Load(entity.URL)
-							if !ok || time.Unix(last.(int64), 0).Before(evt.CreatedAt) {
-								_ = evt.Sign(entity.PrivateKey)
-								r.updates <- evt
-								r.lastEmitted.Store(entity.URL, last)
-							}
+					for _, item := range feed.Items {
+						defaultCreatedAt := time.Now()
+						evt := itemToTextNote(pubkey, item, feed, defaultCreatedAt)
+						last, ok := r.lastEmitted.Load(entity.URL)
+						if !ok || time.Unix(last.(int64), 0).Before(evt.CreatedAt) {
+							_ = evt.Sign(entity.PrivateKey)
+							r.updates <- evt
+							r.lastEmitted.Store(entity.URL, last)
 						}
 					}
 				}
@@ -126,7 +137,7 @@ func (r *Relay) Storage() relayer.Storage {
 }
 
 type store struct {
-	db *pebble.DB
+	db *sql.DB
 }
 
 func (b store) Init() error { return nil }
@@ -146,23 +157,47 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 	}
 
 	for _, pubkey := range filter.Authors {
-		if val, closer, err := relay.db.Get([]byte(pubkey)); err == nil {
-			defer closer.Close()
+		pubkey = strings.TrimSpace(pubkey)
+		row := relay.db.QueryRow("SELECT privatekey, url FROM feeds WHERE publickey=$1", pubkey)
 
-			var entity Entity
-			if err := json.Unmarshal(val, &entity); err != nil {
-				log.Printf("got invalid json from db at key %s: %v", pubkey, err)
+		var entity Entity
+		err := row.Scan(&entity.PrivateKey, &entity.URL)
+		if err != nil && err == sql.ErrNoRows {
+			continue
+		} else if err != nil {
+			log.Fatalf("failed when trying to retrieve row with pubkey '%s': %v", pubkey, err)
+		}
+
+		feed, err := parseFeed(entity.URL)
+		if err != nil {
+			log.Printf("failed to parse feed at url %q: %v", entity.URL, err)
+			continue
+		}
+
+		if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindSetMetadata) {
+			evt := feedToSetMetadata(pubkey, feed)
+
+			if filter.Since != nil && evt.CreatedAt.Before(*filter.Since) {
+				continue
+			}
+			if filter.Until != nil && evt.CreatedAt.After(*filter.Until) {
 				continue
 			}
 
-			feed, err := parseFeed(entity.URL)
-			if err != nil {
-				log.Printf("failed to parse feed at url %q: %v", entity.URL, err)
-				continue
-			}
+			_ = evt.Sign(entity.PrivateKey)
+			evts = append(evts, evt)
+		}
 
-			if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindSetMetadata) {
-				evt := feedToSetMetadata(pubkey, feed)
+		if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindTextNote) {
+			var last uint32 = 0
+			for _, item := range feed.Items {
+				defaultCreatedAt := time.Now()
+				evt := itemToTextNote(pubkey, item, feed, defaultCreatedAt)
+
+				// Feed need to have a date for each entry...
+				if evt.CreatedAt.Equal(defaultCreatedAt) {
+					continue
+				}
 
 				if filter.Since != nil && evt.CreatedAt.Before(*filter.Since) {
 					continue
@@ -172,38 +207,15 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 				}
 
 				_ = evt.Sign(entity.PrivateKey)
+
+				if evt.CreatedAt.After(time.Unix(int64(last), 0)) {
+					last = uint32(evt.CreatedAt.Unix())
+				}
+
 				evts = append(evts, evt)
 			}
 
-			if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindTextNote) {
-				var last uint32 = 0
-				for _, item := range feed.Items {
-					defaultCreatedAt := time.Now()
-					evt := itemToTextNote(pubkey, item, feed, defaultCreatedAt)
-
-					// Feed need to have a date for each entry...
-					if evt.CreatedAt.Equal(defaultCreatedAt) {
-						continue
-					}
-
-					if filter.Since != nil && evt.CreatedAt.Before(*filter.Since) {
-						continue
-					}
-					if filter.Until != nil && evt.CreatedAt.After(*filter.Until) {
-						continue
-					}
-
-					_ = evt.Sign(entity.PrivateKey)
-
-					if evt.CreatedAt.After(time.Unix(int64(last), 0)) {
-						last = uint32(evt.CreatedAt.Unix())
-					}
-
-					evts = append(evts, evt)
-				}
-
-				relay.lastEmitted.Store(entity.URL, last)
-			}
+			relay.lastEmitted.Store(entity.URL, last)
 		}
 	}
 
@@ -216,7 +228,38 @@ func (r *Relay) InjectEvents() chan nostr.Event {
 
 func main() {
 	CreateHealthCheck()
+	defer relay.db.Close()
 	if err := relayer.Start(relay); err != nil {
 		log.Fatalf("server terminated: %v", err)
 	}
+}
+
+func InitDatabase(r *Relay) *sql.DB {
+	finalConnection := dsn
+	if *dsn == "" {
+		log.Print("dsn required is not present... defaulting to DB_DIR")
+		finalConnection = &r.DatabaseDirectory
+	}
+
+	// Create empty dir if not exists
+	dbPath := path.Dir(*finalConnection)
+	err := os.MkdirAll(dbPath, 0660)
+	if err != nil {
+		log.Printf("unable to initialize DB_DIR at: %s. Error: %v", dbPath, err)
+	}
+
+	// Connect to SQLite database.
+	sqlDb, err := sql.Open("sqlite3", *finalConnection)
+	if err != nil {
+		log.Fatalf("open db: %v", err)
+	}
+
+	log.Printf("database opened at %s", *finalConnection)
+
+	// Run migration.
+	if _, err := sqlDb.Exec(schemaSQL); err != nil {
+		log.Fatalf("cannot migrate schema: %v", err)
+	}
+
+	return sqlDb
 }

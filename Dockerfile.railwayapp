@@ -14,6 +14,7 @@ RUN go mod download
 COPY *.go ./
 COPY assets/* ./assets/
 COPY templates/* ./templates/
+COPY schema.sql .
 
 RUN apk add --no-cache build-base
 
@@ -36,7 +37,7 @@ ENV PORT=$PORT
 ENV DB_DIR=$DB_DIR
 ENV DEFAULT_PROFILE_PICTURE_URL=$DEFAULT_PROFILE_PICTURE_URL
 ENV SECRET=$SECRET
-ENV VERSION=0.2.8
+ENV VERSION=0.2.9
 
 COPY --from=build /rsslay .
 

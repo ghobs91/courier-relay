@@ -3,4 +3,4 @@ db
 .idea
 .vs
 dist
-app.yaml
+*.sqlite

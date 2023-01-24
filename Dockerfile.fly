@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1
+FROM flyio/litefs:0.3 AS litefs
 FROM golang:1.19-alpine as build
 
 WORKDIR /app
@@ -13,7 +15,7 @@ COPY schema.sql .
 
 RUN apk add --no-cache build-base
 
-RUN CGO_ENABLED=1 go build -ldflags="-s -w -linkmode external -extldflags '-static'" -o /rsslay
+RUN CGO_ENABLED=1 go build -ldflags="-s -w -linkmode external -extldflags '-static'" -tags osusergo,netgo -o /rsslay
 
 FROM alpine:latest
 
@@ -29,6 +31,11 @@ ENV DEFAULT_PROFILE_PICTURE_URL="https://i.imgur.com/MaceU96.png"
 ENV SECRET="CHANGE_ME"
 ENV VERSION=0.2.9
 
-COPY --from=build /rsslay .
+COPY --from=litefs /usr/local/bin/litefs /usr/local/bin/litefs
+COPY --from=build /rsslay /usr/local/bin/rsslay
 
-CMD [ "/rsslay" ]
+ADD etc/litefs.yml /etc/litefs.yml
+
+RUN apk add bash fuse sqlite ca-certificates curl
+
+ENTRYPOINT litefs mount -- rsslay -dsn /litefs/rsslay
