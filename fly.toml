@@ -7,6 +7,8 @@ app = "rsslay"
   PORT = "8080"
   DB_DIR = "/var/lib/litefs/db"
   DEFAULT_PROFILE_PICTURE_URL = "https://i.imgur.com/MaceU96.png"
+  REPLAY_TO_RELAYS = "true"
+  RELAYS_TO_PUBLISH_TO = "wss://nostr.developer.li;wss://relay.nostr.moe"
 
 [[services]]
   internal_port = 8080

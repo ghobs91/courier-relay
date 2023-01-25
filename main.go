@@ -37,6 +37,7 @@ type Relay struct {
 	Secret            string `envconfig:"SECRET" required:"true"`
 	DatabaseDirectory string `envconfig:"DB_DIR" default:"db/rsslay.sqlite"`
 	Version           string `envconfig:"VERSION" default:"unknown"`
+	ReplayToRelays    bool   `envconfig:"REPLAY_TO_RELAYS" default:"false"`
 
 	updates     chan nostr.Event
 	lastEmitted sync.Map
@@ -79,7 +80,7 @@ func (r *Relay) Init() error {
 	if err != nil {
 		return fmt.Errorf("couldn't process envconfig: %w", err)
 	} else {
-		fmt.Printf("Running VERSION %s:\n - DSN=%s\n - DB_DIR=%s\n\n", r.Version, *dsn, r.DatabaseDirectory)
+		log.Printf("Running VERSION %s:\n - DSN=%s\n - DB_DIR=%s\n\n", r.Version, *dsn, r.DatabaseDirectory)
 	}
 
 	r.db = InitDatabase(r)
@@ -90,6 +91,7 @@ func (r *Relay) Init() error {
 		filters := relayer.GetListeningFilters()
 		log.Printf("checking for updates; %d filters active", len(filters))
 
+		var evts []nostr.Event
 		for _, filter := range filters {
 			if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindTextNote) {
 				for _, pubkey := range filter.Authors {
@@ -118,10 +120,14 @@ func (r *Relay) Init() error {
 							_ = evt.Sign(entity.PrivateKey)
 							r.updates <- evt
 							r.lastEmitted.Store(entity.URL, last)
+							evts = append(evts, evt)
 						}
 					}
 				}
 			}
+		}
+		if relay.ReplayToRelays {
+			replayEventsToRelays(evts)
 		}
 	}()
 
@@ -217,6 +223,10 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 
 			relay.lastEmitted.Store(entity.URL, last)
 		}
+	}
+
+	if relay.ReplayToRelays {
+		replayEventsToRelays(evts)
 	}
 
 	return evts, nil

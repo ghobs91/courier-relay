@@ -28,6 +28,8 @@ ENV DB_DIR="/db/rsslay.sqlite"
 ENV DEFAULT_PROFILE_PICTURE_URL="https://i.imgur.com/MaceU96.png"
 ENV SECRET="CHANGE_ME"
 ENV VERSION=0.2.9
+ENV REPLAY_TO_RELAYS=false
+ENV RELAYS_TO_PUBLISH_TO=""
 
 COPY --from=build /rsslay .
 

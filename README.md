@@ -73,6 +73,8 @@ _**Note:** it will create a local database file to store the currently known RSS
 - `SECRET`: **mandatory**, a random string to be used to generate virtual private keys.
 - `DB_DIR`: path with filename where the database should be created, defaults to `.\db\rsslay.sqlite`.
 - `DEFAULT_PROFILE_PICTURE_URL`: default profile picture URL for feeds that don't have an image.
+- `REPLAY_TO_RELAYS`: set to true if you want to send the fetched events to other relays defined in `RELAYS_TO_PUBLISH_TO` (default is false)
+- `RELAYS_TO_PUBLISH_TO`: string with relays separated by `;` to re-publish events to in format `wss://[URL];wss://[URL2]` where `URL` and `URL2` are URLs of valid relays (default is empty)
 
 ## Running with Docker
 
