@@ -11,10 +11,14 @@ import (
 func replayEventsToRelays(events []nostr.Event) {
 	go func() {
 		// publish the event to predefined relays
+		eventCount := len(events)
+		if eventCount == 0 {
+			return
+		}
+
 		relaysEnv := os.Getenv("RELAYS_TO_PUBLISH_TO")
 		relays := strings.Split(relaysEnv, ";")
 
-		eventCount := len(events)
 		for _, url := range relays {
 			relay, e := nostr.RelayConnect(context.Background(), url)
 			if e != nil {
