@@ -112,7 +112,7 @@ func (r *Relay) Init() error {
 
 					for _, item := range feed.Items {
 						defaultCreatedAt := time.Now()
-						evt := itemToTextNote(pubkey, item, feed, defaultCreatedAt)
+						evt := itemToTextNote(pubkey, item, feed, defaultCreatedAt, entity.URL)
 						last, ok := r.lastEmitted.Load(entity.URL)
 						if !ok || time.Unix(last.(int64), 0).Before(evt.CreatedAt) {
 							_ = evt.Sign(entity.PrivateKey)
@@ -192,7 +192,7 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 			var last uint32 = 0
 			for _, item := range feed.Items {
 				defaultCreatedAt := time.Now()
-				evt := itemToTextNote(pubkey, item, feed, defaultCreatedAt)
+				evt := itemToTextNote(pubkey, item, feed, defaultCreatedAt, entity.URL)
 
 				// Feed need to have a date for each entry...
 				if evt.CreatedAt.Equal(defaultCreatedAt) {

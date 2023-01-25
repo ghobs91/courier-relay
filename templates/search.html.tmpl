@@ -8,106 +8,129 @@
 </head>
 
 <body>
-    <div class="hero is-primary">
-        <div class="hero-body">
-            <p class="title"><a href="/">rsslay</a></p>
-            <p class="subtitle">rsslay turns RSS or Atom feeds into <a
-                    href="https://github.com/nostr-protocol/nostr">Nostr</a> profiles.</p>
-        </div>
+<div class="hero is-primary">
+    <div class="hero-body">
+        <p class="title"><a href="/">rsslay</a></p>
+        <p class="subtitle">rsslay turns RSS or Atom feeds into <a
+                href="https://github.com/nostr-protocol/nostr">Nostr</a> profiles.</p>
     </div>
-    <div class="container is-fluid mt-4">
-        <nav class="level">
-            <div class="level-item has-text-centered">
-                <div>
-                    <p class="heading">Current feeds count</p>
-                    <p class="title">{{.Count}}</p>
+</div>
+<div class="container is-fluid mt-4">
+    <nav class="level">
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Current feeds count</p>
+                <p class="title">{{.Count}}</p>
+            </div>
+        </div>
+        <div class="level-item has-text-centered">
+            <div>
+                <p class="heading">Matched feeds count</p>
+                <p class="title">{{.FilteredCount}}</p>
+            </div>
+        </div>
+    </nav>
+    <h2 class="subtitle">How to use</h2>
+    <div class="content">
+        <ol>
+            <li>Get the blog URL or RSS or Atom feed URL and paste it below.</li>
+            <li>Click the button to get its corresponding public key.</li>
+            <li>Add this relay to your Nostr client.</li>
+            <li>Follow the feed's public key from your Nostr client.</li>
+        </ol>
+    </div>
+    <h2 class="subtitle">RSS is powerful!</h2>
+    <div class="content">
+        <h3 class="subtitle is-6">🍰 Everything is RSSible</h3>
+        <ul>
+            <li><b>For <a href="https://twitter.com/">Twitter</a> profiles:</b> get rss feed using <a
+                    href="https://nitter.net/">Nitter</a> (ex. <a href="https://nitter.net/Twitter/rss">https://nitter.net/Twitter/rss</a>
+                for Twitter official account)
+            </li>
+            <li><b>For <a href="https://joinmastodon.org/">Mastodon</a> profiles:</b> get the rss feed by adding ".rss"
+                to the end of the url of someone's profile (ex. <a href="https://mastodon.social/@Gargron.rss">https://mastodon.social/@Gargron.rss</a>)
+            </li>
+            <li><b>For <a href="https://www.scuttlebutt.nz/">ScuttleButt</a>:</b> get the rss feed using <a
+                    href="https://viewer.scuttlebot.io">https://viewer.scuttlebot.io</a></li>
+            <li><b>For sites missing a feed (with support for <a
+                    href="https://github.com/RSS-Bridge/rss-bridge/tree/master/bridges">several sites</a>), try using <a
+                    href="https://rss-bridge.github.io/rss-bridge/">RSS-Bridge</a>:</b> get the rss feed for your page
+                (ex.
+                <a href="https://rssbridge.nostr.moe/?action=display&bridge=Reddit&context=single&r=nostr&score=2&d=hot&search=&format=Atom">r/nostr
+                    in Reddit</a>) using any public instance (ex. <a href="https://rssbridge.nostr.moe/">nostr.moe
+                    public bridge</a>)
+            </li>
+            <li><b><a href="https://rsshub.app/">RssHub</a> it's capable of generating RSS feeds from pretty much
+                everything too</b>, check it how to use it in <a
+                    href="https://docs.rsshub.app/">https://docs.rsshub.app</a> (ex. <a
+                    href="https://rsshub.app/github/topics/nostr">repos inside nostr topic in GitHub</a>)
+            </li>
+        </ul>
+    </div>
+    <div class="content">
+        <p>Create a profile for a RSS feed:</p>
+        <form action="/create" method="GET" class="control">
+            <div class="field has-addons">
+                <div class="control is-expanded">
+                    <input class="input is-link is-normal" name="url" type="url"
+                           placeholder="https://example.com/feed">
+                </div>
+                <div class="control">
+                    <button class="button is-link">Get Public Key</button>
                 </div>
             </div>
-            <div class="level-item has-text-centered">
-                <div>
-                    <p class="heading">Matched feeds count</p>
-                    <p class="title">{{.FilteredCount}}</p>
+        </form>
+    </div>
+    <h2 class="subtitle">Found feeds (showing a maximum of 50, refine your query if necessary)</h2>
+    <div class="content">
+        <form action="/search" method="GET" class="control">
+            <p>Search by URL (if you want to search by key you can use a normal
+                client):</p>
+            <div class="field has-addons">
+                <div class="control is-expanded">
+                    <input class="input is-link is-normal" name="query" type="text" placeholder="bitcoin">
+                </div>
+                <div class="control">
+                    <a class="button is-info">
+                        Search
+                    </a>
                 </div>
             </div>
-        </nav>
-        <h2 class="subtitle">How to use</h2>
-        <div class="content">
-            <ol>
-                <li>Get the blog URL or RSS or Atom feed URL and paste it below.</li>
-                <li>Click the button to get its corresponding public key.</li>
-                <li>Add this relay to your Nostr client.</li>
-                <li>Follow the feed's public key from your Nostr client.</li>
-            </ol>
-        </div>
-        <h2 class="subtitle">RSS is powerful!</h2>
-        <div class="content">
-            <h3 class="subtitle is-6">🍰 Everything is RSSible</h3>
-            <ul>
-                <li><b>For <a href="https://twitter.com/">Twitter</a> profiles:</b> get rss feed using <a href="https://nitter.net/">Nitter</a> (ex. <a href="https://nitter.net/Twitter/rss">https://nitter.net/Twitter/rss</a> for Twitter official account)</li>
-                <li><b>For <a href="https://joinmastodon.org/">Mastodon</a> profiles:</b> get the rss feed by adding ".rss" to the end of the url of someone's profile (ex. <a href="https://mastodon.social/@Gargron.rss">https://mastodon.social/@Gargron.rss</a>)</li>
-                <li><b>For <a href="https://www.scuttlebutt.nz/">ScuttleButt</a>:</b> get the rss feed using <a href="https://viewer.scuttlebot.io">https://viewer.scuttlebot.io</a></li>
-                <li><b>For sites missing a feed (with support for <a href="https://github.com/RSS-Bridge/rss-bridge/tree/master/bridges">several sites</a>), try using <a href="https://rss-bridge.github.io/rss-bridge/">RSS-Bridge</a>:</b> get the rss feed for your page (ex. <a href="https://rssbridge.nostr.moe/?action=display&bridge=Reddit&context=single&r=nostr&score=2&d=hot&search=&format=Atom">r/nostr in Reddit</a>) using any public instance (ex. <a href="https://rssbridge.nostr.moe/">nostr.moe public bridge</a>)</li>
-                <li><b><a href="https://rsshub.app/">RssHub</a> it's capable of generating RSS feeds from pretty much everything too</b>, check it how to use it in <a href="https://docs.rsshub.app/">https://docs.rsshub.app</a> (ex. <a href="https://rsshub.app/github/topics/nostr">repos inside nostr topic in GitHub</a>)</li>
-            </ul>
-        </div>
-        <div class="content">
-            <form action="/create" method="GET" class="control">
-                <div class="field">
-                    <div class="control"><label><input class="input is-link is-normal" name="url" type="url"
-                                placeholder="https://example.com/feed"></label></div>
-                </div>
-                <div class="field">
-                    <div class="control">
-                        <button class="button is-link">Get Public Key</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <h2 class="subtitle">Found feeds (showing a maximum of 50, refine your query if necessary)</h2>
-        <div class="content">
-            <form action="/search" method="GET" class="control">
-                <div class="field">
-                    <div class="control">Search by URL (if you want to search by key you can use a normal client):<label><input class="input is-link is-normal" name="query" type="text"
-                                                       placeholder="bitcoin"></label></div>
-                </div>
-                <div class="field">
-                    <div class="control">
-                        <button class="button is-link">Search</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <table class="table">
-            <tbody>
-                <tr>
-                    <th>Public key (Hex)</th>
-                    <th>Public key</th>
-                    <th>Feed URL</th>
-                </tr>
-                {{range .Entries}}
-                <tr>
-                    <td><a href="https://www.nostr.guru/p/{{.PubKey}}" style="word-break: break-all;">{{.PubKey}}</a>
-                    </td>
-                    <td><a href="https://www.nostr.guru/{{.NPubKey}}" style="word-break: break-all;">{{.NPubKey}}</a>
-                    </td>
-                    <td><a href="{{.Url}}" style="word-break: break-all;">{{.Url}}</a>
-                    </td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-        <h2 class="subtitle">Source Code</h2>
-        <p>You can find it at <a href="https://github.com/piraces/rsslay">github.com/piraces/rsslay</a></p>
-        <p>Upstream source code at <a href="https://github.com/fiatjaf/relayer/tree/master/rss-bridge">github.com/fiatjaf/relayer</a></p>
+        </form>
     </div>
-    <footer class="footer">
-        <div class="content has-text-centered">
-            <p>
-                <strong>rsslay</strong> original work by <a href="https://fiatjaf.com">fiatjaf</a> modifications by <a href="https://piraces.dev">piraces</a>. The source code is
-                <a href="https://github.com/piraces/rsslay/blob/master/LICENSE">UNlicensed</a>. Keep the good vibes 🤙
-            </p>
-        </div>
-    </footer>
+    <table class="table">
+        <tbody>
+        <tr>
+            <th>Public key (Hex)</th>
+            <th>Public key</th>
+            <th>Feed URL</th>
+        </tr>
+        {{range .Entries}}
+        <tr>
+            <td><a href="https://www.nostr.guru/p/{{.PubKey}}" style="word-break: break-all;">{{.PubKey}}</a>
+            </td>
+            <td><a href="https://www.nostr.guru/{{.NPubKey}}" style="word-break: break-all;">{{.NPubKey}}</a>
+            </td>
+            <td><a href="{{.Url}}" style="word-break: break-all;">{{.Url}}</a>
+            </td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table>
+    <h2 class="subtitle">Source Code</h2>
+    <p>You can find it at <a href="https://github.com/piraces/rsslay">github.com/piraces/rsslay</a></p>
+    <p>Upstream source code at <a href="https://github.com/fiatjaf/relayer/tree/master/rss-bridge">github.com/fiatjaf/relayer</a>
+    </p>
+</div>
+<footer class="footer">
+    <div class="content has-text-centered">
+        <p>
+            <strong>rsslay</strong> original work by <a href="https://fiatjaf.com">fiatjaf</a> modifications by <a
+                href="https://piraces.dev">piraces</a>. The source code is
+            <a href="https://github.com/piraces/rsslay/blob/master/LICENSE">UNlicensed</a>. Keep the good vibes 🤙
+        </p>
+    </div>
+</footer>
 </body>
 
 </html>

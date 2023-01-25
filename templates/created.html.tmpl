@@ -8,68 +8,72 @@
 </head>
 
 <body>
-    <div class="hero is-primary">
-        <div class="hero-body">
-            <p class="title"><a href="/">rsslay</a></p>
-            <p class="subtitle">rsslay turns RSS or Atom feeds into <a
-                    href="https://github.com/nostr-protocol/nostr">Nostr</a> profiles.</p>
-        </div>
+<div class="hero is-primary">
+    <div class="hero-body">
+        <p class="title"><a href="/">rsslay</a></p>
+        <p class="subtitle">rsslay turns RSS or Atom feeds into <a
+                href="https://github.com/nostr-protocol/nostr">Nostr</a> profiles.</p>
     </div>
-    <div class="container is-fluid mt-4">
-        {{if .Error}}
-            <div class="notification is-danger">
-              {{.ErrorMessage}}
-            </div>
-        {{else}}
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
+</div>
+<div class="container is-fluid mt-4">
+    {{if .Error}}
+    <div class="notification is-danger">
+        {{.ErrorMessage}}
+    </div>
+    {{else}}
+    <div class="box">
+
+        <div class="field is-horizontal">
+            <div class="field-label is-normal">
                 <label class="label">Public Key (Hex)</label>
-              </div>
-              <div class="field-body">
+            </div>
+            <div class="field-body">
                 <div class="field">
-                  <p class="control">
-                    <input class="input is-static" type="text" value="{{.PubKey}}" readonly>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="field is-horizontal">
-                <div class="field-label is-normal">
-                    <label class="label">Public Key</label>
-                </div>
-                <div class="field-body">
-                    <div class="field">
-                        <p class="control">
-                            <input class="input is-static" type="text" value="{{.NPubKey}}" readonly>
-                        </p>
-                    </div>
+                    <p class="control">
+                        <input class="input is-static" type="text" value="{{.PubKey}}" readonly>
+                    </p>
                 </div>
             </div>
-
-            <div class="field is-horizontal">
-              <div class="field-label is-normal">
-                <label class="label">URL</label>
-              </div>
-              <div class="field-body">
-                <div class="field">
-                  <p class="control">
-                    <input class="input is-static" type="url" value="{{.Url}}" readonly>
-                  </p>
-                </div>
-              </div>
-            </div>
-        {{end}}
-        <a href="/">Go home</a>
-    </div>
-    <footer class="footer">
-        <div class="content has-text-centered">
-            <p>
-                <strong>rsslay</strong> original work by <a href="https://fiatjaf.com">fiatjaf</a> modifications by <a href="https://piraces.dev">piraces</a>. The source code is
-                <a href="https://github.com/piraces/rsslay/blob/master/LICENSE">UNlicensed</a>. Keep the good vibes 🤙
-            </p>
         </div>
-    </footer>
+
+        <div class="field is-horizontal">
+            <div class="field-label is-normal">
+                <label class="label">Public Key</label>
+            </div>
+            <div class="field-body">
+                <div class="field">
+                    <p class="control">
+                        <input class="input is-static" type="text" value="{{.NPubKey}}" readonly>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="field is-horizontal">
+            <div class="field-label is-normal">
+                <label class="label">URL</label>
+            </div>
+            <div class="field-body">
+                <div class="field">
+                    <p class="control">
+                        <input class="input is-static" type="url" value="{{.Url}}" readonly>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{end}}
+    <a class="button is-primary mt-3 mb-3" href="/">Go home</a>
+</div>
+<footer class="footer">
+    <div class="content has-text-centered">
+        <p>
+            <strong>rsslay</strong> original work by <a href="https://fiatjaf.com">fiatjaf</a> modifications by <a
+                href="https://piraces.dev">piraces</a>. The source code is
+            <a href="https://github.com/piraces/rsslay/blob/master/LICENSE">UNlicensed</a>. Keep the good vibes 🤙
+        </p>
+    </div>
+</footer>
 </body>
 
 </html>

@@ -124,7 +124,7 @@ func feedToSetMetadata(pubkey string, feed *gofeed.Feed) nostr.Event {
 	return evt
 }
 
-func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, defaultCreatedAt time.Time) nostr.Event {
+func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, defaultCreatedAt time.Time, originalUrl string) nostr.Event {
 	content := ""
 	if item.Title != "" {
 		content = "**" + item.Title + "**\n\n"
@@ -135,9 +135,17 @@ func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, default
 		content += description
 	}
 
-	// Handle Nitter duplicates
+	shouldUpgradeLinkSchema := false
+
+	// Handle Nitter special cases (duplicates and http schema)
 	if strings.Contains(feed.Description, "Twitter feed") {
 		content = ""
+		shouldUpgradeLinkSchema = true
+
+		if strings.HasPrefix(originalUrl, "https://") {
+			description = strings.ReplaceAll(description, "http://", "https://")
+		}
+
 		if strings.Contains(item.Title, "RT by @") {
 			if len(item.DublinCoreExt.Creator) > 0 {
 				content = "**" + "RT " + item.DublinCoreExt.Creator[0] + ":**\n\n"
@@ -154,6 +162,10 @@ func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, default
 
 	if len(content) > 250 {
 		content += content[0:249] + "…"
+	}
+
+	if shouldUpgradeLinkSchema {
+		item.Link = strings.ReplaceAll(item.Link, "http://", "https://")
 	}
 	content += "\n\n" + item.Link
 
