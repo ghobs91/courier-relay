@@ -175,7 +175,7 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 		}
 
 		if filter.Kinds == nil || slices.Contains(filter.Kinds, nostr.KindSetMetadata) {
-			evt := feedToSetMetadata(pubkey, feed)
+			evt := feedToSetMetadata(pubkey, feed, entity.URL)
 
 			if filter.Since != nil && evt.CreatedAt.Before(*filter.Since) {
 				continue

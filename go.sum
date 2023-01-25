@@ -19,8 +19,8 @@ github.com/decred/dcrd/crypto/blake256 v1.0.0 h1:/8DMNYp9SGi5f0w7uCm6d6M4OU2rGFK
 github.com/decred/dcrd/crypto/blake256 v1.0.0/go.mod h1:sQl2p6Y26YV+ZOcSTP6thNdn47hh8kt6rqSlvmrXFAc=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 h1:YLtO71vCjJRCBcrPMtQ9nqBsqpA1m5sE92cU+pd5Mcc=
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1/go.mod h1:hyedUtir6IdtD/7lIxGeCxkaw7y45JueMRL4DIyJDKs=
-github.com/fiatjaf/relayer v1.6.0 h1:xWJ0T8+qQx0IqQe8hKQWBx2ngfq5NGAKOU4iUnR2Uew=
-github.com/fiatjaf/relayer v1.6.0/go.mod h1:+TwlyQUDPqyyZHEGNYaMNeYsiopOekWcmR5UNB/xXZ4=
+github.com/fiatjaf/relayer v1.6.1-0.20230119205628-d7750ad15f21 h1:YrY0Tj3hp10/yIBWUTVCLe7ZDcR6uxnsrFT0VVU964w=
+github.com/fiatjaf/relayer v1.6.1-0.20230119205628-d7750ad15f21/go.mod h1:IRpb8bITXLeJ3QFjU4FeunRC4G6DQ7r5L/4y5Nam7sY=
 github.com/google/go-cmp v0.5.8 h1:e6P7q2lk1O+qJJb4BtCQXlK8vWEO8V1ZeuEdJNOqZyg=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=

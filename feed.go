@@ -92,7 +92,17 @@ func parseFeed(url string) (*gofeed.Feed, error) {
 	return feed, nil
 }
 
-func feedToSetMetadata(pubkey string, feed *gofeed.Feed) nostr.Event {
+func feedToSetMetadata(pubkey string, feed *gofeed.Feed, originalUrl string) nostr.Event {
+	// Handle Nitter special cases (http schema)
+	if strings.Contains(feed.Description, "Twitter feed") {
+		if strings.HasPrefix(originalUrl, "https://") {
+			feed.Description = strings.ReplaceAll(feed.Description, "http://", "https://")
+			feed.Title = strings.ReplaceAll(feed.Title, "http://", "https://")
+			feed.Image.URL = strings.ReplaceAll(feed.Image.URL, "http://", "https://")
+			feed.Link = strings.ReplaceAll(feed.Link, "http://", "https://")
+		}
+	}
+
 	metadata := map[string]string{
 		"name":  feed.Title,
 		"about": feed.Description + "\n\n" + feed.Link,

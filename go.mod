@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.0
-	github.com/fiatjaf/relayer v1.6.0
+	github.com/fiatjaf/relayer v1.6.1-0.20230119205628-d7750ad15f21
 	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/hellofresh/health-go/v5 v5.0.0
 	github.com/kelseyhightower/envconfig v1.4.0
