@@ -74,7 +74,13 @@ _**Note:** it will create a local database file to store the currently known RSS
 - `DB_DIR`: path with filename where the database should be created, defaults to `.\db\rsslay.sqlite`.
 - `DEFAULT_PROFILE_PICTURE_URL`: default profile picture URL for feeds that don't have an image.
 - `REPLAY_TO_RELAYS`: set to true if you want to send the fetched events to other relays defined in `RELAYS_TO_PUBLISH_TO` (default is false)
-- `RELAYS_TO_PUBLISH_TO`: string with relays separated by `;` to re-publish events to in format `wss://[URL];wss://[URL2]` where `URL` and `URL2` are URLs of valid relays (default is empty)
+- `RELAYS_TO_PUBLISH_TO`: string with relays separated by `,` to re-publish events to in format `wss://[URL],wss://[URL2]` where `URL` and `URL2` are URLs of valid relays (default is empty)
+- `DEFAULT_WAIT_TIME_BETWEEN_BATCHES`: default time to wait between sending batches of requests to other relays in milliseconds (default 60000, 60 seconds)
+- `MAX_EVENTS_TO_REPLAY`: maximum number of events to send to a relay in `RELAYS_TO_PUBLISH_TO` in a batch
+- `ENABLE_AUTO_NIP05_REGISTRATION`: enables [NIP-05](https://github.com/nostr-protocol/nips/blob/master/05.md) automatic registration for all feed profiles in the format `[URL]@[MAIN_DOMAIN_NAME]` where URL is the main URL for the feed and `MAIN_DOMAIN_NAME` the below environment variable (default `false`)
+- `MAIN_DOMAIN_NAME`: main domain name where this relay will be available (only for NIP-05 purposes if enabled with `ENABLE_AUTO_NIP05_REGISTRATION`)
+- `OWNER_PUBLIC_KEY`: public key to show at the `/.well-known/nostr.json` endpoint by default mapped as the domain owner (`_@[MAIN_DOMAIN_NAME]` where `MAIN_DOMAIN_NAME` is the environment variable)
+- `MAX_SUBROUTINES`: maximum number to maintain in order to replay events to other relays (to prevent crash, default 20)
 
 ## Running with Docker
 

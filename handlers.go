@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/nbd-wtf/go-nostr/nip05"
 	"github.com/nbd-wtf/go-nostr/nip19"
 	"html/template"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -159,6 +161,37 @@ func handleApiFeed(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
 	}
+}
+
+func handleNip05(w http.ResponseWriter, r *http.Request) {
+	name := r.URL.Query().Get("name")
+	name, _ = url.QueryUnescape(name)
+	w.Header().Set("Content-Type", "application/json")
+	nip05WellKnownResponse := nip05.WellKnownResponse{
+		Names: map[string]string{
+			"_": relay.OwnerPublicKey,
+		},
+		Relays: nil,
+	}
+
+	var response []byte
+	if name != "" && name != "_" && relay.EnableAutoNIP05Registration {
+		row := relay.db.QueryRow("SELECT publickey FROM feeds WHERE url=$1", name)
+
+		var entity Entity
+		err := row.Scan(&entity.PublicKey)
+		if err == nil {
+			nip05WellKnownResponse = nip05.WellKnownResponse{
+				Names: map[string]string{
+					name: entity.PublicKey,
+				},
+				Relays: nil,
+			}
+		}
+	}
+
+	response, _ = json.Marshal(nip05WellKnownResponse)
+	_, _ = w.Write(response)
 }
 
 func handleCreateFeedEntry(w http.ResponseWriter, r *http.Request) {

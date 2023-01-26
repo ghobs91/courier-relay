@@ -34,15 +34,25 @@ var relay = &Relay{
 }
 
 type Relay struct {
-	Secret            string `envconfig:"SECRET" required:"true"`
-	DatabaseDirectory string `envconfig:"DB_DIR" default:"db/rsslay.sqlite"`
-	Version           string `envconfig:"VERSION" default:"unknown"`
-	ReplayToRelays    bool   `envconfig:"REPLAY_TO_RELAYS" default:"false"`
+	Secret                        string   `envconfig:"SECRET" required:"true"`
+	DatabaseDirectory             string   `envconfig:"DB_DIR" default:"db/rsslay.sqlite"`
+	DefaultProfilePictureUrl      string   `envconfig:"DEFAULT_PROFILE_PICTURE_URL" default:"https://i.imgur.com/MaceU96.png"`
+	Version                       string   `envconfig:"VERSION" default:"unknown"`
+	ReplayToRelays                bool     `envconfig:"REPLAY_TO_RELAYS" default:"false"`
+	RelaysToPublish               []string `envconfig:"RELAYS_TO_PUBLISH_TO" default:""`
+	DefaultWaitTimeBetweenBatches int64    `envconfig:"DEFAULT_WAIT_TIME_BETWEEN_BATCHES" default:"60000"`
+	MaxEventsToReplay             int      `envconfig:"MAX_EVENTS_TO_REPLAY" default:"20"`
+	EnableAutoNIP05Registration   bool     `envconfig:"ENABLE_AUTO_NIP05_REGISTRATION" default:"false"`
+	MainDomainName                string   `envconfig:"MAIN_DOMAIN_NAME" default:""`
+	OwnerPublicKey                string   `envconfig:"OWNER_PUBLIC_KEY" default:""`
+	MaxSubroutines                int      `envconfig:"MAX_SUBROUTINES" default:"20"`
 
-	updates     chan nostr.Event
-	lastEmitted sync.Map
-	db          *sql.DB
-	healthCheck *health.Health
+	updates            chan nostr.Event
+	lastEmitted        sync.Map
+	db                 *sql.DB
+	healthCheck        *health.Health
+	mu                 sync.Mutex
+	routineQueueLength int
 }
 
 func CreateHealthCheck() {
@@ -72,6 +82,7 @@ func (r *Relay) OnInitialized(s *relayer.Server) {
 	s.Router().Path("/favicon.ico").HandlerFunc(handleFavicon)
 	s.Router().Path("/healthz").HandlerFunc(r.healthCheck.HandlerFunc)
 	s.Router().Path("/api/feed").HandlerFunc(handleApiFeed)
+	s.Router().Path("/.well-known/nostr.json").HandlerFunc(handleNip05)
 }
 
 func (r *Relay) Init() error {
@@ -126,8 +137,9 @@ func (r *Relay) Init() error {
 				}
 			}
 		}
-		if relay.ReplayToRelays {
-			replayEventsToRelays(evts)
+		if relay.ReplayToRelays && relay.routineQueueLength < relay.MaxSubroutines && len(evts) > 0 {
+			r.routineQueueLength++
+			replayEventsToRelays(relay, evts)
 		}
 	}()
 
@@ -225,8 +237,9 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 		}
 	}
 
-	if relay.ReplayToRelays {
-		replayEventsToRelays(evts)
+	if relay.ReplayToRelays && relay.routineQueueLength < relay.MaxSubroutines && len(evts) > 0 {
+		relay.routineQueueLength++
+		replayEventsToRelays(relay, evts)
 	}
 
 	return evts, nil

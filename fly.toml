@@ -8,7 +8,13 @@ app = "rsslay"
   DB_DIR = "/var/lib/litefs/db"
   DEFAULT_PROFILE_PICTURE_URL = "https://i.imgur.com/MaceU96.png"
   REPLAY_TO_RELAYS = "true"
-  RELAYS_TO_PUBLISH_TO = "wss://nostr.developer.li;wss://relay.nostr.moe"
+  RELAYS_TO_PUBLISH_TO = "wss://nostr.developer.li,wss://relay.nostr.moe,wss://nostr.orangepill.dev,wss://nostr.fmt.wiz.biz"
+  DEFAULT_WAIT_TIME_BETWEEN_BATCHES = "60000"
+  MAX_EVENTS_TO_REPLAY = "10"
+  MAIN_DOMAIN_NAME = "rsslay.nostr.moe"
+  ENABLE_AUTO_NIP05_REGISTRATION = "true"
+  OWNER_PUBLIC_KEY = "072d52c5955d40a26b74f9957bee187c2a750d68e01247b16ad9b96ed6b00927"
+  MAX_SUBROUTINES = 20
 
 [[services]]
   internal_port = 8080

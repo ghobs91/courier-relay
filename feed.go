@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -27,6 +26,7 @@ var (
 )
 
 type Entity struct {
+	PublicKey  string
 	PrivateKey string
 	URL        string
 }
@@ -108,11 +108,14 @@ func feedToSetMetadata(pubkey string, feed *gofeed.Feed, originalUrl string) nos
 		"about": feed.Description + "\n\n" + feed.Link,
 	}
 
-	defaultProfileImage := os.Getenv("DEFAULT_PROFILE_PICTURE_URL")
+	if relay.EnableAutoNIP05Registration {
+		metadata["nip05"] = fmt.Sprintf("%s@%s", feed.Link, "rsslay.nostr.moe")
+	}
+
 	if feed.Image != nil {
 		metadata["picture"] = feed.Image.URL
-	} else if defaultProfileImage != "" {
-		metadata["picture"] = defaultProfileImage
+	} else if relay.DefaultProfilePictureUrl != "" {
+		metadata["picture"] = relay.DefaultProfilePictureUrl
 	}
 
 	content, _ := json.Marshal(metadata)
