@@ -176,7 +176,7 @@ func handleNip05(w http.ResponseWriter, r *http.Request) {
 
 	var response []byte
 	if name != "" && name != "_" && relay.EnableAutoNIP05Registration {
-		row := relay.db.QueryRow("SELECT publickey FROM feeds WHERE url=$1", name)
+		row := relay.db.QueryRow("SELECT publickey FROM feeds WHERE url like '%' || $1 || '%'", name)
 
 		var entity Entity
 		err := row.Scan(&entity.PublicKey)
