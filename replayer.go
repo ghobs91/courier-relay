@@ -35,7 +35,7 @@ func replayEventsToRelays(relay *Relay, events []nostr.Event) {
 				publishStatus := relay.Publish(context.Background(), ev)
 				statusSummary = statusSummary | int(publishStatus)
 			}
-			log.Printf("Replayed %d events to %s with status summary %d\n", eventCount, url, statusSummary)
+			log.Printf("Replayed %d events to %s with status summary %d\n", len(events), url, statusSummary)
 			_ = relay.Close()
 		}
 		time.Sleep(time.Duration(relay.DefaultWaitTimeBetweenBatches) * time.Millisecond)
