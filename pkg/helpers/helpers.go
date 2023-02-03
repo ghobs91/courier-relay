@@ -1,11 +1,11 @@
-package main
+package helpers
 
 import (
 	"net/url"
 	"path"
 )
 
-func urljoin(baseUrl string, elem ...string) (result string, err error) {
+func UrlJoin(baseUrl string, elem ...string) (result string, err error) {
 	u, err := url.Parse(baseUrl)
 	if err != nil {
 		return

@@ -1,4 +1,4 @@
-package main
+package feed
 
 import (
 	"crypto/hmac"
@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/piraces/rsslay/pkg/helpers"
 	"net/http"
 	"strings"
 	"time"
@@ -39,7 +40,7 @@ var types = []string{
 	"application/xml",
 }
 
-func getFeedURL(url string) string {
+func GetFeedURL(url string) string {
 	resp, err := client.Get(url)
 	if err != nil || resp.StatusCode >= 300 {
 		return ""
@@ -64,7 +65,7 @@ func getFeedURL(url string) string {
 				continue
 			}
 			if !strings.HasPrefix(href, "http") {
-				href, _ = urljoin(url, href)
+				href, _ = helpers.UrlJoin(url, href)
 			}
 			return href
 		}
@@ -73,7 +74,7 @@ func getFeedURL(url string) string {
 	return ""
 }
 
-func parseFeed(url string) (*gofeed.Feed, error) {
+func ParseFeed(url string) (*gofeed.Feed, error) {
 	if feed, ok := feedCache.Get(url); ok {
 		return feed.(*gofeed.Feed), nil
 	}
@@ -92,7 +93,7 @@ func parseFeed(url string) (*gofeed.Feed, error) {
 	return feed, nil
 }
 
-func feedToSetMetadata(pubkey string, feed *gofeed.Feed, originalUrl string) nostr.Event {
+func FeedToSetMetadata(pubkey string, feed *gofeed.Feed, originalUrl string, enableAutoRegistration bool, defaultProfilePictureUrl string) nostr.Event {
 	// Handle Nitter special cases (http schema)
 	if strings.Contains(feed.Description, "Twitter feed") {
 		if strings.HasPrefix(originalUrl, "https://") {
@@ -108,14 +109,14 @@ func feedToSetMetadata(pubkey string, feed *gofeed.Feed, originalUrl string) nos
 		"about": feed.Description + "\n\n" + feed.Link,
 	}
 
-	if relay.EnableAutoNIP05Registration {
+	if enableAutoRegistration {
 		metadata["nip05"] = fmt.Sprintf("%s@%s", feed.Link, "rsslay.nostr.moe")
 	}
 
 	if feed.Image != nil {
 		metadata["picture"] = feed.Image.URL
-	} else if relay.DefaultProfilePictureUrl != "" {
-		metadata["picture"] = relay.DefaultProfilePictureUrl
+	} else if defaultProfilePictureUrl != "" {
+		metadata["picture"] = defaultProfilePictureUrl
 	}
 
 	content, _ := json.Marshal(metadata)
@@ -137,7 +138,7 @@ func feedToSetMetadata(pubkey string, feed *gofeed.Feed, originalUrl string) nos
 	return evt
 }
 
-func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, defaultCreatedAt time.Time, originalUrl string) nostr.Event {
+func ItemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, defaultCreatedAt time.Time, originalUrl string) nostr.Event {
 	content := ""
 	if item.Title != "" {
 		content = "**" + item.Title + "**\n\n"
@@ -202,8 +203,8 @@ func itemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, default
 	return evt
 }
 
-func privateKeyFromFeed(url string) string {
-	m := hmac.New(sha256.New, []byte(relay.Secret))
+func PrivateKeyFromFeed(url string, secret string) string {
+	m := hmac.New(sha256.New, []byte(secret))
 	m.Write([]byte(url))
 	r := m.Sum(nil)
 	return hex.EncodeToString(r)

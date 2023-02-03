@@ -1,13 +1,15 @@
-package main
+package handlers
 
 import (
 	"database/sql"
-	"embed"
 	"encoding/json"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip05"
 	"github.com/nbd-wtf/go-nostr/nip19"
+	"github.com/piraces/rsslay/pkg/feed"
+	"github.com/piraces/rsslay/web/assets"
+	"github.com/piraces/rsslay/web/templates"
 	"html/template"
 	"log"
 	"net/http"
@@ -17,13 +19,7 @@ import (
 	"strings"
 )
 
-//go:embed templates/*
-var resources embed.FS
-
-//go:embed assets/favicon.ico
-var favicon []byte
-
-var t = template.Must(template.ParseFS(resources, "templates/*"))
+var t = template.Must(template.ParseFS(templates.Templates, "*.tmpl"))
 
 type Entry struct {
 	PubKey       string
@@ -40,14 +36,14 @@ type PageData struct {
 	Entries       []Entry
 }
 
-func handleWebpage(w http.ResponseWriter, r *http.Request) {
+func HandleWebpage(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	mustRedirect := handleOtherRegion(w, r)
 	if mustRedirect {
 		return
 	}
 
 	var count uint64
-	row := relay.db.QueryRow(`SELECT count(*) FROM feeds`)
+	row := db.QueryRow(`SELECT count(*) FROM feeds`)
 	err := row.Scan(&count)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -55,7 +51,7 @@ func handleWebpage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var items []Entry
-	rows, err := relay.db.Query(`SELECT publickey, url FROM feeds LIMIT 50`)
+	rows, err := db.Query(`SELECT publickey, url FROM feeds LIMIT 50`)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -84,7 +80,7 @@ func handleWebpage(w http.ResponseWriter, r *http.Request) {
 	_ = t.ExecuteTemplate(w, "index.html.tmpl", data)
 }
 
-func handleSearch(w http.ResponseWriter, r *http.Request) {
+func HandleSearch(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	mustRedirect := handleOtherRegion(w, r)
 	if mustRedirect {
 		return
@@ -97,7 +93,7 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var count uint64
-	row := relay.db.QueryRow(`SELECT count(*) FROM feeds`)
+	row := db.QueryRow(`SELECT count(*) FROM feeds`)
 	err := row.Scan(&count)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -105,7 +101,7 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var items []Entry
-	rows, err := relay.db.Query(`SELECT publickey, url FROM feeds WHERE url like '%' || $1 || '%' LIMIT 50`, query)
+	rows, err := db.Query(`SELECT publickey, url FROM feeds WHERE url like '%' || $1 || '%' LIMIT 50`, query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -135,50 +131,50 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	_ = t.ExecuteTemplate(w, "search.html.tmpl", data)
 }
 
-func handleCreateFeed(w http.ResponseWriter, r *http.Request) {
-	mustRedirect := handleRedirectToPrimaryNode(w)
+func HandleCreateFeed(w http.ResponseWriter, r *http.Request, db *sql.DB, secret *string, dsn *string) {
+	mustRedirect := handleRedirectToPrimaryNode(w, dsn)
 	if mustRedirect {
 		return
 	}
 
-	entry := createFeedEntry(r)
+	entry := createFeedEntry(r, db, secret)
 	_ = t.ExecuteTemplate(w, "created.html.tmpl", entry)
 }
 
-func handleFavicon(w http.ResponseWriter, r *http.Request) {
+func HandleFavicon(w http.ResponseWriter, r *http.Request) {
 	mustRedirect := handleOtherRegion(w, r)
 	if mustRedirect {
 		return
 	}
 
 	w.Header().Set("Content-Type", "image/x-icon")
-	_, _ = w.Write(favicon)
+	_, _ = w.Write(assets.Favicon)
 }
 
-func handleApiFeed(w http.ResponseWriter, r *http.Request) {
+func HandleApiFeed(w http.ResponseWriter, r *http.Request, db *sql.DB, secret *string, dsn *string) {
 	if r.Method == http.MethodGet || r.Method == http.MethodPost {
-		handleCreateFeedEntry(w, r)
+		handleCreateFeedEntry(w, r, db, secret, dsn)
 	} else {
 		http.Error(w, "Method not supported", http.StatusMethodNotAllowed)
 	}
 }
 
-func handleNip05(w http.ResponseWriter, r *http.Request) {
+func HandleNip05(w http.ResponseWriter, r *http.Request, db *sql.DB, ownerPubKey *string, enableAutoRegistration *bool) {
 	name := r.URL.Query().Get("name")
 	name, _ = url.QueryUnescape(name)
 	w.Header().Set("Content-Type", "application/json")
 	nip05WellKnownResponse := nip05.WellKnownResponse{
 		Names: map[string]string{
-			"_": relay.OwnerPublicKey,
+			"_": *ownerPubKey,
 		},
 		Relays: nil,
 	}
 
 	var response []byte
-	if name != "" && name != "_" && relay.EnableAutoNIP05Registration {
-		row := relay.db.QueryRow("SELECT publickey FROM feeds WHERE url like '%' || $1 || '%'", name)
+	if name != "" && name != "_" && *enableAutoRegistration {
+		row := db.QueryRow("SELECT publickey FROM feeds WHERE url like '%' || $1 || '%'", name)
 
-		var entity Entity
+		var entity feed.Entity
 		err := row.Scan(&entity.PublicKey)
 		if err == nil {
 			nip05WellKnownResponse = nip05.WellKnownResponse{
@@ -194,13 +190,13 @@ func handleNip05(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(response)
 }
 
-func handleCreateFeedEntry(w http.ResponseWriter, r *http.Request) {
-	mustRedirect := handleRedirectToPrimaryNode(w)
+func handleCreateFeedEntry(w http.ResponseWriter, r *http.Request, db *sql.DB, secret *string, dsn *string) {
+	mustRedirect := handleRedirectToPrimaryNode(w, dsn)
 	if mustRedirect {
 		return
 	}
 
-	entry := createFeedEntry(r)
+	entry := createFeedEntry(r, db, secret)
 	w.Header().Set("Content-Type", "application/json")
 
 	if entry.ErrorCode >= 400 {
@@ -223,7 +219,7 @@ func handleOtherRegion(w http.ResponseWriter, r *http.Request) bool {
 	return false
 }
 
-func handleRedirectToPrimaryNode(w http.ResponseWriter) bool {
+func handleRedirectToPrimaryNode(w http.ResponseWriter, dsn *string) bool {
 	// If this node is not primary, look up and redirect to the current primary.
 	primaryFilename := filepath.Join(filepath.Dir(*dsn), ".primary")
 	primary, err := os.ReadFile(primaryFilename)
@@ -240,12 +236,12 @@ func handleRedirectToPrimaryNode(w http.ResponseWriter) bool {
 	return false
 }
 
-func createFeedEntry(r *http.Request) *Entry {
-	url := r.URL.Query().Get("url")
+func createFeedEntry(r *http.Request, db *sql.DB, secret *string) *Entry {
+	urlParam := r.URL.Query().Get("url")
 	entry := Entry{
 		Error: false,
 	}
-	feedUrl := getFeedURL(url)
+	feedUrl := feed.GetFeedURL(urlParam)
 	if feedUrl == "" {
 		entry.ErrorCode = http.StatusBadRequest
 		entry.Error = true
@@ -253,14 +249,14 @@ func createFeedEntry(r *http.Request) *Entry {
 		return &entry
 	}
 
-	if _, err := parseFeed(feedUrl); err != nil {
+	if _, err := feed.ParseFeed(feedUrl); err != nil {
 		entry.ErrorCode = http.StatusBadRequest
 		entry.Error = true
 		entry.ErrorMessage = "Bad feed: " + err.Error()
 		return &entry
 	}
 
-	sk := privateKeyFromFeed(feedUrl)
+	sk := feed.PrivateKeyFromFeed(feedUrl, *secret)
 	publicKey, err := nostr.GetPublicKey(sk)
 	if err != nil {
 		entry.ErrorCode = http.StatusInternalServerError
@@ -270,7 +266,7 @@ func createFeedEntry(r *http.Request) *Entry {
 	}
 
 	publicKey = strings.TrimSpace(publicKey)
-	defer insertFeed(err, feedUrl, publicKey, sk)
+	defer insertFeed(err, feedUrl, publicKey, sk, db)
 
 	entry.Url = feedUrl
 	entry.PubKey = publicKey
@@ -278,14 +274,14 @@ func createFeedEntry(r *http.Request) *Entry {
 	return &entry
 }
 
-func insertFeed(err error, feedUrl string, publicKey string, sk string) {
-	row := relay.db.QueryRow("SELECT privatekey, url FROM feeds WHERE publickey=$1", publicKey)
+func insertFeed(err error, feedUrl string, publicKey string, sk string, db *sql.DB) {
+	row := db.QueryRow("SELECT privatekey, url FROM feeds WHERE publickey=$1", publicKey)
 
-	var entity Entity
+	var entity feed.Entity
 	err = row.Scan(&entity.PrivateKey, &entity.URL)
 	if err != nil && err == sql.ErrNoRows {
 		log.Printf("not found feed at url %q as publicKey %s", feedUrl, publicKey)
-		if _, err := relay.db.Exec(`INSERT INTO feeds (publickey, privatekey, url) VALUES (?, ?, ?)`, publicKey, sk, feedUrl); err != nil {
+		if _, err := db.Exec(`INSERT INTO feeds (publickey, privatekey, url) VALUES (?, ?, ?)`, publicKey, sk, feedUrl); err != nil {
 			log.Printf("failure: " + err.Error())
 		} else {
 			log.Printf("saved feed at url %q as publicKey %s", feedUrl, publicKey)

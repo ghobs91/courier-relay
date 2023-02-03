@@ -8,14 +8,15 @@ COPY go.mod ./
 COPY go.sum ./
 RUN go mod download
 
-COPY *.go ./
-COPY assets/* ./assets/
-COPY templates/* ./templates/
-COPY schema.sql .
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+COPY pkg/ ./pkg/
+COPY web/ ./web/
+COPY scripts/ ./scripts/
 
 RUN apk add --no-cache build-base
 
-RUN CGO_ENABLED=1 go build -ldflags="-s -w -linkmode external -extldflags '-static'" -tags osusergo,netgo -o /rsslay
+RUN CGO_ENABLED=1 go build -ldflags="-s -w -linkmode external -extldflags '-static'" -tags osusergo,netgo -o /rsslay cmd/rsslay/main.go
 
 FROM alpine:latest
 
@@ -33,6 +34,7 @@ ENV VERSION=0.3.1
 ENV REPLAY_TO_RELAYS=false
 ENV RELAYS_TO_PUBLISH_TO=""
 ENV DEFAULT_WAIT_TIME_BETWEEN_BATCHES=60000
+ENV DEFAULT_WAIT_TIME_FOR_RELAY_RESPONSE=3000
 ENV MAX_EVENTS_TO_REPLAY=10
 ENV ENABLE_AUTO_NIP05_REGISTRATION=false
 ENV MAIN_DOMAIN_NAME=""

@@ -5,6 +5,9 @@
 [![Publish Docker image](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml)
 ![Docker Hub](https://img.shields.io/docker/pulls/piraces/rsslay?logo=docker)
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/piraces/rsslay)](https://goreportcard.com/report/github.com/piraces/rsslay)
+[![Go Reference](https://pkg.go.dev/badge/github.com/piraces/rsslay.svg)](https://pkg.go.dev/github.com/piraces/rsslay)
+
 **Relay that creates virtual nostr profiles for each RSS feed submitted**
 
 **Working relay: `wss://rsslay.nostr.moe`. Frontend available in [rsslay.nostr.moe](https://rsslay.nostr.moe).**
@@ -76,6 +79,7 @@ _**Note:** it will create a local database file to store the currently known RSS
 - `REPLAY_TO_RELAYS`: set to true if you want to send the fetched events to other relays defined in `RELAYS_TO_PUBLISH_TO` (default is false)
 - `RELAYS_TO_PUBLISH_TO`: string with relays separated by `,` to re-publish events to in format `wss://[URL],wss://[URL2]` where `URL` and `URL2` are URLs of valid relays (default is empty)
 - `DEFAULT_WAIT_TIME_BETWEEN_BATCHES`: default time to wait between sending batches of requests to other relays in milliseconds (default 60000, 60 seconds)
+- `DEFAULT_WAIT_TIME_FOR_RELAY_RESPONSE`: default time to wait for relay response for possible auth event in milliseconds (default is 3000, 3 seconds).
 - `MAX_EVENTS_TO_REPLAY`: maximum number of events to send to a relay in `RELAYS_TO_PUBLISH_TO` in a batch
 - `ENABLE_AUTO_NIP05_REGISTRATION`: enables [NIP-05](https://github.com/nostr-protocol/nips/blob/master/05.md) automatic registration for all feed profiles in the format `[URL]@[MAIN_DOMAIN_NAME]` where URL is the main URL for the feed and `MAIN_DOMAIN_NAME` the below environment variable (default `false`)
 - `MAIN_DOMAIN_NAME`: main domain name where this relay will be available (only for NIP-05 purposes if enabled with `ENABLE_AUTO_NIP05_REGISTRATION`)

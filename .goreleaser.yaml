@@ -1,5 +1,6 @@
 builds:
 - id: rsslay-linux
+  main: ./cmd/rsslay
   ldflags:
     - -s -w -linkmode external -extldflags '-static' -X 'github.com/piraces/rsslay/pkg/version.BuildVersion={{.Version}}'
   env:
