@@ -1,9 +1,10 @@
-<html>
+<html lang="en">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
     <title>rsslay</title>
 </head>
 
@@ -61,9 +62,20 @@
                 </div>
             </div>
         </div>
+        <div class="buttons is-justify-content-center">
+            <a href="https://astral.ninja/{{.NPubKey}}" target="_blank" class="button is-link is-light">View in astral.ninja</a>
+            <a href="https://iris.to/#/profile/{{.NPubKey}}" target="_blank" class="button is-link is-light">View in iris.to</a>
+            <a href="https://snort.social/p/{{.NPubKey}}" target="_blank" class="button is-link is-light">View in snort.social</a>
+            <a href="nostr:{{.NPubKey}}" target="_blank" class="button is-link is-light">Open in default app</a>
+        </div>
     </div>
     {{end}}
-    <a class="button is-primary mt-3 mb-3" href="/">Go home</a>
+    <a class="button is-primary mt-3 mb-3" href="/">
+        <span class="icon">
+            <i class="fas fa-home"></i>
+        </span>
+        <span>Go home</span>
+    </a>
 </div>
 <footer class="footer">
     <div class="content has-text-centered">

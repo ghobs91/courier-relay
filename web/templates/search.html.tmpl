@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css" integrity="sha384-DyZ88mC6Up2uqS4h/KRgHuoeGwBcD4Ng9SiP4dIRy0EXTlnuz47vAwmeGwVChigm" crossorigin="anonymous"/>
     <title>rsslay</title>
 </head>
 
@@ -76,7 +77,12 @@
                            placeholder="https://example.com/feed">
                 </div>
                 <div class="control">
-                    <button class="button is-link">Get Public Key</button>
+                    <button class="button is-link">
+                        <span class="icon">
+                          <i class="fas fa-key"></i>
+                        </span>
+                        <span>Get Public Key</span>
+                    </button>
                 </div>
             </div>
         </form>
@@ -92,7 +98,10 @@
                 </div>
                 <div class="control">
                     <a class="button is-info">
-                        Search
+                        <span class="icon">
+                          <i class="fas fa-filter"></i>
+                        </span>
+                        <span>Search</span>
                     </a>
                 </div>
             </div>
@@ -104,14 +113,23 @@
             <th>Public key (Hex)</th>
             <th>Public key</th>
             <th>Feed URL</th>
+            <th>View in clients</th>
         </tr>
         {{range .Entries}}
         <tr>
             <td><a href="https://www.nostr.guru/p/{{.PubKey}}" style="word-break: break-all;">{{.PubKey}}</a>
             </td>
-            <td><a href="https://www.nostr.guru/{{.NPubKey}}" style="word-break: break-all;">{{.NPubKey}}</a>
+            <td><a href="nostr:{{.NPubKey}}" style="word-break: break-all;">{{.NPubKey}}</a>
             </td>
             <td><a href="{{.Url}}" style="word-break: break-all;">{{.Url}}</a>
+            </td>
+            <td>
+                <div class="buttons">
+                    <a href="https://astral.ninja/{{.NPubKey}}" target="_blank" class="button is-small is-link is-light">View in astral.ninja</a>
+                    <a href="https://iris.to/#/profile/{{.NPubKey}}" target="_blank" class="button is-small is-link is-light">View in iris.to</a>
+                    <a href="https://snort.social/p/{{.NPubKey}}" target="_blank" class="button is-small is-link is-light">View in snort.social</a>
+                    <a href="nostr:{{.NPubKey}}" target="_blank" class="button is-small is-link is-light">Open in default app</a>
+                </div>
             </td>
         </tr>
         {{end}}
