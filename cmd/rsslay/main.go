@@ -134,6 +134,7 @@ func (r *Relay) Init() error {
 					parsedFeed, err := feed.ParseFeed(entity.URL)
 					if err != nil {
 						log.Printf("failed to parse feed at url %q: %v", entity.URL, err)
+						feed.DeleteInvalidFeed(entity.URL, r.db)
 						continue
 					}
 
@@ -212,6 +213,7 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 		parsedFeed, err := feed.ParseFeed(entity.URL)
 		if err != nil {
 			log.Printf("failed to parse feed at url %q: %v", entity.URL, err)
+			feed.DeleteInvalidFeed(entity.URL, relayInstance.db)
 			continue
 		}
 
