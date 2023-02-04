@@ -66,7 +66,7 @@ func GetFeedURL(url string) string {
 			if href == "" {
 				continue
 			}
-			if !strings.HasPrefix(href, "http") {
+			if !strings.HasPrefix(href, "http") && !strings.HasPrefix(href, "https") {
 				href, _ = helpers.UrlJoin(url, href)
 			}
 			return href
