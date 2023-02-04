@@ -1,5 +1,6 @@
 # rsslay
 
+[![CI Build & Test](https://github.com/piraces/rsslay/actions/workflows/main.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/main.yml)
 [![Fly Deploy](https://github.com/piraces/rsslay/actions/workflows/fly.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/fly.yml)
 [![CI Dive Check](https://github.com/piraces/rsslay/actions/workflows/dive-check.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/dive-check.yml)
 [![Publish Docker image](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml)
