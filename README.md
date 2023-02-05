@@ -5,6 +5,7 @@
 [![CI Dive Check](https://github.com/piraces/rsslay/actions/workflows/dive-check.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/dive-check.yml)
 [![Publish Docker image](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/piraces/rsslay/actions/workflows/docker-publish.yml)
 ![Docker Hub](https://img.shields.io/docker/pulls/piraces/rsslay?logo=docker)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpiraces%2Frsslay.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpiraces%2Frsslay?ref=badge_shield)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/piraces/rsslay)](https://goreportcard.com/report/github.com/piraces/rsslay)
 [![Go Reference](https://pkg.go.dev/badge/github.com/piraces/rsslay.svg)](https://pkg.go.dev/github.com/piraces/rsslay)
@@ -178,3 +179,6 @@ Also on [the bird site](https://twitter.com/piraces_), and [Mastodon](https://ha
 
 [Unlicense](https://unlicense.org).
 
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpiraces%2Frsslay.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpiraces%2Frsslay?ref=badge_large)
