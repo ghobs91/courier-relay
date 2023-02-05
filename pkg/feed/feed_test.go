@@ -42,6 +42,16 @@ var sampleNitterFeed = gofeed.Feed{
 	},
 }
 
+var sampleStackerNewsFeed = gofeed.Feed{
+	Title:           "Stacker News",
+	Description:     "Like Hacker News, but we pay you Bitcoin.",
+	Link:            "https://stacker.news",
+	FeedLink:        "https://stacker.news/rss",
+	Links:           []string{"https://blog.cryptographyengineering.com/2014/11/zero-knowledge-proofs-illustrated-primer.html"},
+	PublishedParsed: &actualTime,
+	Language:        "en",
+}
+
 var sampleNitterFeedRTItem = gofeed.Item{
 	Title:           "RT by @coldplay: TOMORROW",
 	Description:     "Sample description",
@@ -80,6 +90,16 @@ var sampleDefaultFeedItem = gofeed.Item{
 
 var sampleDefaultFeedItemExpectedContent = fmt.Sprintf("**%s**\n\n%s", sampleDefaultFeedItem.Title, sampleDefaultFeedItem.Description)
 var sampleDefaultFeedItemExpectedContentSubstring = sampleDefaultFeedItemExpectedContent[0:249]
+
+var sampleStackerNewsFeedItem = gofeed.Item{
+	Title:           "Zero Knowledge Proofs: An illustrated primer",
+	Description:     "<a href=\"https://stacker.news/items/131533\">Comments</a>",
+	Content:         "Sample content",
+	Link:            "https://blog.cryptographyengineering.com/2014/11/zero-knowledge-proofs-illustrated-primer.html",
+	UpdatedParsed:   &actualTime,
+	PublishedParsed: &actualTime,
+	GUID:            "https://stacker.news/items/131533",
+}
 
 var sampleDefaultFeed = gofeed.Feed{
 	Title:           "Golang Weekly",
@@ -215,6 +235,14 @@ func TestItemToTextNote(t *testing.T) {
 			defaultCreatedAt: actualTime,
 			originalUrl:      sampleDefaultFeed.FeedLink,
 			expectedContent:  sampleDefaultFeedItemExpectedContentSubstring + "…" + "\n\n" + sampleDefaultFeedItem.Link,
+		},
+		{
+			pubKey:           samplePubKey,
+			item:             &sampleStackerNewsFeedItem,
+			feed:             &sampleStackerNewsFeed,
+			defaultCreatedAt: actualTime,
+			originalUrl:      sampleStackerNewsFeed.FeedLink,
+			expectedContent:  fmt.Sprintf("**%s**\n\nComments: %s\n\n%s", sampleStackerNewsFeedItem.Title, sampleStackerNewsFeedItem.GUID, sampleStackerNewsFeedItem.Link),
 		},
 	}
 	for _, tc := range testCases {

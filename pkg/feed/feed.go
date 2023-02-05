@@ -7,17 +7,17 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/piraces/rsslay/pkg/helpers"
-	"log"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/PuerkitoBio/goquery"
 	strip "github.com/grokify/html-strip-tags-go"
 	"github.com/mmcdole/gofeed"
 	"github.com/nbd-wtf/go-nostr"
+	"github.com/piraces/rsslay/pkg/helpers"
 	"github.com/rif/cache2go"
+	"html"
+	"log"
+	"net/http"
+	"strings"
+	"time"
 )
 
 var (
@@ -145,7 +145,13 @@ func ItemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, default
 	if item.Title != "" {
 		content = "**" + item.Title + "**\n\n"
 	}
+
 	description := strip.StripTags(item.Description)
+
+	// Handle stacker.news comments
+	if strings.Contains(feed.Link, "stacker.news") {
+		description += fmt.Sprintf(": %s", item.GUID)
+	}
 
 	if !strings.EqualFold(item.Title, description) {
 		content += description
@@ -176,6 +182,7 @@ func ItemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, default
 		content += description
 	}
 
+	content = html.UnescapeString(content)
 	if len(content) > 250 {
 		content = content[0:249] + "…"
 	}
@@ -198,7 +205,7 @@ func ItemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, default
 		CreatedAt: createdAt,
 		Kind:      nostr.KindTextNote,
 		Tags:      nostr.Tags{},
-		Content:   content,
+		Content:   strings.ToValidUTF8(content, ""),
 	}
 	evt.ID = string(evt.Serialize())
 
