@@ -14,6 +14,8 @@
 
 **Relay that creates virtual nostr profiles for each RSS feed submitted**
 
+**Donate for development ⚡:** [https://getalby.com/p/piraces](https://getalby.com/p/piraces)
+
 **Working relay: `wss://rsslay.nostr.moe`. Frontend available in [rsslay.nostr.moe](https://rsslay.nostr.moe).**
 
   - A Nostr relay implementation based on [relayer](https://github.com/fiatjaf/relayer/) by [fiatjaf](https://fiatjaf.com).
