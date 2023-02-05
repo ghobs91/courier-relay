@@ -7,6 +7,7 @@
 [![codecov](https://codecov.io/gh/piraces/rsslay/branch/main/graph/badge.svg?token=tNKcOjlxLo)](https://codecov.io/gh/piraces/rsslay)
 
 ![Docker Hub](https://img.shields.io/docker/pulls/piraces/rsslay?logo=docker)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fpiraces%2Frsslay.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fpiraces%2Frsslay?ref=badge_shield)
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/piraces/rsslay)](https://goreportcard.com/report/github.com/piraces/rsslay)
 [![Go Reference](https://pkg.go.dev/badge/github.com/piraces/rsslay.svg)](https://pkg.go.dev/github.com/piraces/rsslay)
