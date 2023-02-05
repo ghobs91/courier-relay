@@ -170,14 +170,14 @@ func ItemToTextNote(pubkey string, item *gofeed.Item, feed *gofeed.Feed, default
 			fields := strings.Fields(item.Title)
 			if len(fields) >= 2 {
 				replyingToHandle := fields[2]
-				content = "**" + "Response to " + replyingToHandle + ":**\n\n"
+				content = "**" + "Response to " + replyingToHandle + "**\n\n"
 			}
 		}
 		content += description
 	}
 
 	if len(content) > 250 {
-		content += content[0:249] + "…"
+		content = content[0:249] + "…"
 	}
 
 	if shouldUpgradeLinkSchema {

@@ -1,8 +1,13 @@
 package feed
 
 import (
+	"errors"
+	"fmt"
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/mmcdole/gofeed"
+	ext "github.com/mmcdole/gofeed/extensions"
 	"github.com/stretchr/testify/assert"
+	"strings"
 	"testing"
 	"time"
 )
@@ -36,6 +41,46 @@ var sampleNitterFeed = gofeed.Feed{
 		Title: "Coldplay / @coldplay",
 	},
 }
+
+var sampleNitterFeedRTItem = gofeed.Item{
+	Title:           "RT by @coldplay: TOMORROW",
+	Description:     "Sample description",
+	Content:         "Sample content",
+	Link:            "http://nitter.moomoo.me/coldplay/status/1622148481740685312#m",
+	UpdatedParsed:   &actualTime,
+	PublishedParsed: &actualTime,
+	GUID:            "http://nitter.moomoo.me/coldplay/status/1622148481740685312#m",
+	DublinCoreExt: &ext.DublinCoreExtension{
+		Creator: []string{"@nbcsnl"},
+	},
+}
+
+var sampleNitterFeedResponseItem = gofeed.Item{
+	Title:           "R to @coldplay: Sample",
+	Description:     "Sample description",
+	Content:         "Sample content",
+	Link:            "http://nitter.moomoo.me/elonmusk/status/1621544996167122944#m",
+	UpdatedParsed:   &actualTime,
+	PublishedParsed: &actualTime,
+	GUID:            "http://nitter.moomoo.me/elonmusk/status/1621544996167122944#m",
+	DublinCoreExt: &ext.DublinCoreExtension{
+		Creator: []string{"@elonmusk"},
+	},
+}
+
+var sampleDefaultFeedItem = gofeed.Item{
+	Title:           "Golang Weekly",
+	Description:     "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus nec condimentum orci. Vestibulum at nunc porta, placerat ex sit amet, consectetur augue. Donec cursus ipsum sed venenatis maximus. Nunc tincidunt dui nec congue lacinia. In mollis magna eu nisi viverra luctus. Ut ultrices eros gravida, lacinia nibh vitae, tristique massa. Sed eu scelerisque erat. Sed eget tortor et turpis feugiat interdum. Nulla sit amet nibh vel massa bibendum congue. Quisque sed tempor velit. Interdum et malesuada fames ac ante ipsum primis in faucibus. Curabitur suscipit mollis fringilla. Integer quis sodales tortor, at hendrerit lacus. Cras posuere maximus nisi. Mauris eget.",
+	Content:         "Sample content",
+	Link:            "https://golangweekly.com/issues/446",
+	UpdatedParsed:   &actualTime,
+	PublishedParsed: &actualTime,
+	GUID:            "https://golangweekly.com/issues/446",
+}
+
+var sampleDefaultFeedItemExpectedContent = fmt.Sprintf("**%s**\n\n%s", sampleDefaultFeedItem.Title, sampleDefaultFeedItem.Description)
+var sampleDefaultFeedItemExpectedContentSubstring = sampleDefaultFeedItemExpectedContent[0:249]
+
 var sampleDefaultFeed = gofeed.Feed{
 	Title:           "Golang Weekly",
 	Description:     "A weekly newsletter about the Go programming language",
@@ -136,4 +181,74 @@ func TestFeedToSetMetadata(t *testing.T) {
 func TestPrivateKeyFromFeed(t *testing.T) {
 	sk := PrivateKeyFromFeed(sampleUrlForPublicKey, testSecret)
 	assert.Equal(t, samplePrivateKeyForPubKey, sk)
+}
+
+func TestItemToTextNote(t *testing.T) {
+	testCases := []struct {
+		pubKey           string
+		item             *gofeed.Item
+		feed             *gofeed.Feed
+		defaultCreatedAt time.Time
+		originalUrl      string
+		expectedContent  string
+	}{
+		{
+			pubKey:           samplePubKey,
+			item:             &sampleNitterFeedRTItem,
+			feed:             &sampleNitterFeed,
+			defaultCreatedAt: actualTime,
+			originalUrl:      sampleNitterFeed.FeedLink,
+			expectedContent:  fmt.Sprintf("**RT %s:**\n\n%s\n\n%s", sampleNitterFeedRTItem.DublinCoreExt.Creator[0], sampleNitterFeedRTItem.Description, strings.ReplaceAll(sampleNitterFeedRTItem.Link, "http://", "https://")),
+		},
+		{
+			pubKey:           samplePubKey,
+			item:             &sampleNitterFeedResponseItem,
+			feed:             &sampleNitterFeed,
+			defaultCreatedAt: actualTime,
+			originalUrl:      sampleNitterFeed.FeedLink,
+			expectedContent:  fmt.Sprintf("**Response to %s:**\n\n%s\n\n%s", "@coldplay", sampleNitterFeedResponseItem.Description, strings.ReplaceAll(sampleNitterFeedResponseItem.Link, "http://", "https://")),
+		},
+		{
+			pubKey:           samplePubKey,
+			item:             &sampleDefaultFeedItem,
+			feed:             &sampleDefaultFeed,
+			defaultCreatedAt: actualTime,
+			originalUrl:      sampleDefaultFeed.FeedLink,
+			expectedContent:  sampleDefaultFeedItemExpectedContentSubstring + "…" + "\n\n" + sampleDefaultFeedItem.Link,
+		},
+	}
+	for _, tc := range testCases {
+		event := ItemToTextNote(tc.pubKey, tc.item, tc.feed, tc.defaultCreatedAt, tc.originalUrl)
+		assert.NotEmpty(t, event)
+		assert.Equal(t, tc.pubKey, event.PubKey)
+		assert.Equal(t, tc.defaultCreatedAt, event.CreatedAt)
+		assert.Equal(t, 1, event.Kind)
+		assert.Equal(t, tc.expectedContent, event.Content)
+		assert.Empty(t, event.Sig)
+		assert.Empty(t, event.Tags)
+	}
+}
+
+func TestDeleteExistingInvalidFeed(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectExec("DELETE FROM feeds").WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectCommit()
+	DeleteInvalidFeed(sampleUrlForPublicKey, db)
+}
+
+func TestDeleteNonExistingInvalidFeed(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	mock.ExpectExec("DELETE FROM feeds").WillReturnError(errors.New(""))
+	mock.ExpectCommit()
+	DeleteInvalidFeed(sampleUrlForPublicKey, db)
 }

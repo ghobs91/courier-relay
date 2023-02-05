@@ -3,6 +3,7 @@ module github.com/piraces/rsslay
 go 1.19
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0
 	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/fiatjaf/relayer v1.7.0
 	github.com/grokify/html-strip-tags-go v0.0.1
