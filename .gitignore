@@ -4,3 +4,4 @@ db
 .vs
 dist
 *.sqlite
+coverage*
