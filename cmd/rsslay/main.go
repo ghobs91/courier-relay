@@ -145,7 +145,7 @@ func (r *Relay) Init() error {
 						if !ok || time.Unix(last.(int64), 0).Before(evt.CreatedAt) {
 							_ = evt.Sign(entity.PrivateKey)
 							r.updates <- evt
-							r.lastEmitted.Store(entity.URL, last)
+							r.lastEmitted.Store(entity.URL, last.(int64))
 							events = append(events, replayer.EventWithPrivateKey{Event: evt, PrivateKey: entity.PrivateKey})
 						}
 					}
