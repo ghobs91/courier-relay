@@ -112,7 +112,7 @@ func FeedToSetMetadata(pubkey string, feed *gofeed.Feed, originalUrl string, ena
 	}
 
 	if enableAutoRegistration {
-		metadata["nip05"] = fmt.Sprintf("%s@%s", feed.Link, "rsslay.nostr.moe")
+		metadata["nip05"] = fmt.Sprintf("%s@%s", originalUrl, "rsslay.nostr.moe")
 	}
 
 	if feed.Image != nil {
