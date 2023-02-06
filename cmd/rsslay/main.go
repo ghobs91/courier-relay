@@ -142,10 +142,10 @@ func (r *Relay) Init() error {
 						defaultCreatedAt := time.Now()
 						evt := feed.ItemToTextNote(pubkey, item, parsedFeed, defaultCreatedAt, entity.URL)
 						last, ok := r.lastEmitted.Load(entity.URL)
-						if !ok || time.Unix(last.(int64), 0).Before(evt.CreatedAt) {
+						if !ok || time.Unix(int64(last.(uint32)), 0).Before(evt.CreatedAt) {
 							_ = evt.Sign(entity.PrivateKey)
 							r.updates <- evt
-							r.lastEmitted.Store(entity.URL, last.(int64))
+							r.lastEmitted.Store(entity.URL, last.(uint32))
 							events = append(events, replayer.EventWithPrivateKey{Event: evt, PrivateKey: entity.PrivateKey})
 						}
 					}
