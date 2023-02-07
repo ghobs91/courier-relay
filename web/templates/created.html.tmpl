@@ -29,10 +29,17 @@
                 <label class="label">Public Key (Hex)</label>
             </div>
             <div class="field-body">
-                <div class="field">
-                    <p class="control">
-                        <input class="input is-static" type="text" value="{{.PubKey}}" readonly>
+                <div class="field has-addons">
+                    <p class="control is-expanded">
+                        <input id="pubKey" class="input is-readonly" type="text" value="{{.PubKey}}" readonly>
                     </p>
+                    <div class="control">
+                        <button class="button is-info copy" name="pubKey">
+                            <span class="icon">
+                                <i class="fas fa-copy"></i>
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -42,10 +49,17 @@
                 <label class="label">Public Key</label>
             </div>
             <div class="field-body">
-                <div class="field">
-                    <p class="control">
-                        <input class="input is-static" type="text" value="{{.NPubKey}}" readonly>
+                <div class="field has-addons">
+                    <p class="control is-expanded">
+                        <input id="nPubKey" class="input is-readonly" type="text" value="{{.NPubKey}}" readonly>
                     </p>
+                    <div class="control">
+                        <button class="button is-info copy" name="nPubKey">
+                            <span class="icon">
+                                <i class="fas fa-copy"></i>
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -55,10 +69,17 @@
                 <label class="label">URL</label>
             </div>
             <div class="field-body">
-                <div class="field">
-                    <p class="control">
-                        <input class="input is-static" type="url" value="{{.Url}}" readonly>
+                <div class="field has-addons">
+                    <p class="control is-expanded">
+                        <input id="url" class="input is-readonly" type="url" value="{{.Url}}" readonly>
                     </p>
+                    <div class="control">
+                        <button class="button is-info copy" name="url">
+                            <span class="icon">
+                                <i class="fas fa-copy"></i>
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,6 +107,23 @@
         </p>
     </div>
 </footer>
+<script type="text/javascript">
+    async function copyToClipboard(name) {
+        const input = document.getElementById(name);
+        input.select();
+        let text = input.value;
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            console.error('Failed to copy: ', err);
+        }
+    }
+    document.addEventListener("DOMContentLoaded", function(_) {
+        document.querySelectorAll('button.copy').forEach(item => {
+            item.addEventListener('click', _ => copyToClipboard(item.name));
+        });
+    });
+</script>
 </body>
 
 </html>
