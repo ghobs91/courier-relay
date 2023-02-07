@@ -110,7 +110,13 @@ func (r *Relay) Init() error {
 
 	r.db = InitDatabase(r)
 
-	go func() {
+	go r.UpdateListeningFilters()
+
+	return nil
+}
+
+func (r *Relay) UpdateListeningFilters() {
+	for {
 		time.Sleep(20 * time.Minute)
 
 		filters := relayer.GetListeningFilters()
@@ -142,6 +148,9 @@ func (r *Relay) Init() error {
 						defaultCreatedAt := time.Now()
 						evt := feed.ItemToTextNote(pubkey, item, parsedFeed, defaultCreatedAt, entity.URL)
 						last, ok := r.lastEmitted.Load(entity.URL)
+						if last == nil {
+							last = uint32(time.Now().Unix())
+						}
 						if !ok || time.Unix(int64(last.(uint32)), 0).Before(evt.CreatedAt) {
 							_ = evt.Sign(entity.PrivateKey)
 							r.updates <- evt
@@ -152,21 +161,23 @@ func (r *Relay) Init() error {
 				}
 			}
 		}
-		if relayInstance.ReplayToRelays && relayInstance.routineQueueLength < relayInstance.MaxSubroutines && len(events) > 0 {
-			r.routineQueueLength++
-			replayer.ReplayEventsToRelays(&replayer.ReplayParameters{
-				MaxEventsToReplay:        relayInstance.MaxEventsToReplay,
-				RelaysToPublish:          relayInstance.RelaysToPublish,
-				Mutex:                    &relayInstance.mutex,
-				Queue:                    &relayInstance.routineQueueLength,
-				WaitTime:                 relayInstance.DefaultWaitTimeBetweenBatches,
-				WaitTimeForRelayResponse: relayInstance.DefaultWaitTimeForRelayResponse,
-				Events:                   events,
-			})
-		}
-	}()
+		r.AttemptReplayEvents(events)
+	}
+}
 
-	return nil
+func (r *Relay) AttemptReplayEvents(events []replayer.EventWithPrivateKey) {
+	if relayInstance.ReplayToRelays && relayInstance.routineQueueLength < relayInstance.MaxSubroutines && len(events) > 0 {
+		r.routineQueueLength++
+		replayer.ReplayEventsToRelays(&replayer.ReplayParameters{
+			MaxEventsToReplay:        relayInstance.MaxEventsToReplay,
+			RelaysToPublish:          relayInstance.RelaysToPublish,
+			Mutex:                    &relayInstance.mutex,
+			Queue:                    &relayInstance.routineQueueLength,
+			WaitTime:                 relayInstance.DefaultWaitTimeBetweenBatches,
+			WaitTimeForRelayResponse: relayInstance.DefaultWaitTimeForRelayResponse,
+			Events:                   events,
+		})
+	}
 }
 
 func (r *Relay) AcceptEvent(_ *nostr.Event) bool {
@@ -264,18 +275,7 @@ func (b store) QueryEvents(filter *nostr.Filter) ([]nostr.Event, error) {
 		}
 	}
 
-	if relayInstance.ReplayToRelays && relayInstance.routineQueueLength < relayInstance.MaxSubroutines && len(eventsToReplay) > 0 {
-		relayInstance.routineQueueLength++
-		replayer.ReplayEventsToRelays(&replayer.ReplayParameters{
-			MaxEventsToReplay:        relayInstance.MaxEventsToReplay,
-			RelaysToPublish:          relayInstance.RelaysToPublish,
-			Mutex:                    &relayInstance.mutex,
-			Queue:                    &relayInstance.routineQueueLength,
-			WaitTime:                 relayInstance.DefaultWaitTimeBetweenBatches,
-			WaitTimeForRelayResponse: relayInstance.DefaultWaitTimeForRelayResponse,
-			Events:                   eventsToReplay,
-		})
-	}
+	relayInstance.AttemptReplayEvents(eventsToReplay)
 
 	return events, nil
 }
